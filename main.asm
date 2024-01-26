@@ -72,6 +72,13 @@ section .data
     min_angle_index: db 0
     max:	db	10
     swapped:	db	0
+    xab:	db	0
+    yab:	db	0
+    xbc:	db	0
+    ybc:	db	0
+    result_vectoriel_xbc_yab:	db	0
+    result_vectoriel_ybc_xab:	db	0
+    final_result_vectoriel:	db	0
 
 section .text
 main:
@@ -286,27 +293,6 @@ dessin:
     cmp byte[i], 10
     jb dessin
 
-    mov rdi,qword[display_name]
-    mov rsi,qword[gc]
-    mov edx,0x000000
-    call XSetForeground
-
-
-    mov rdi,qword[display_name]
-    mov rsi,qword[window]
-    mov rdx,qword[gc]
-    movzx rsi, byte[i]
-    mov rcx,[last_point_random_x]	; coordonnée en x du point
-    sub ecx,3
-    mov r8,[last_point_random_y]	; coordonnée en y du point
-    sub r8,3
-    mov r9,6
-    mov rax,23040
-    push rax
-    push 0
-    push r9
-    call XFillArc
-
     jmp flush
 
 flush:
@@ -328,3 +314,171 @@ closeDisplay:
 ;########### JARVIS      ##################
 ;##################################################
 	
+jarivs_boucle_1:
+
+    jmp jarivs_boucle_2
+    mov byte[j], 0 ; reset
+
+
+
+    jarivs_boucle_2:
+
+        ;;; xab
+        movzx rsi, byte[j]
+        movzx rdx, byte[i]
+        movzx rax, byte[tab1+rsi*BYTE]
+        sub al, byte[tab1+rdx*BYTE]
+        mov byte[xab], al
+
+        ;;; yab
+        movzx rsi, byte[j]
+        movzx rdx, byte[i]
+        movzx rax, byte[tab2+rsi*BYTE]
+        sub al, byte[tab2+rdx*BYTE]
+        mov byte[yab], al
+
+        ;;; xbc
+        movzx rsi, byte[i]
+        movzx rdx, byte[j]
+        movzx rax, byte[tab1+rsi*BYTE]
+        sub al, byte[tab1+rdx*BYTE]
+        mov byte[xbc], al
+
+        ;;; ybc
+        movzx rsi, byte[i]
+        movzx rdx, byte[j]
+        movzx rax, byte[tab2+rsi*BYTE]
+        sub al, byte[tab2+rdx*BYTE]
+        mov byte[ybc], al
+
+        ;;; produit vectoriel xbc yab
+        movzx rsi, byte[xbc]
+        movzx rdx, byte[yab]
+        imul rsi, rdx
+        mov byte[result_vectoriel_xbc_yab], sil
+
+        ;;; produit vectoriel xab ybc
+        movzx rsi, byte[xab]
+        movzx rdx, byte[ybc]
+        imul rsi, rdx
+        mov byte[result_vectoriel_ybc_xab], sil
+
+        ;;; final result vectoriel
+        movzx rsi, byte[result_vectoriel_xbc_yab]
+        movzx rdx, byte[result_vectoriel_ybc_xab]
+        sub sil, dil
+        mov byte[final_result_vectoriel], sil
+
+
+
+        ; TODO : si c'est positif, alors le point est à gauche, sinon il est à droite
+        ; TODO : stocker le résultat dans la variable min_angle et l'index dans la variable min_angle_index
+
+
+        ;;;
+        ;couleur de la ligne 1
+        mov rdi,qword[display_name]
+        mov rsi,qword[gc]
+        mov edx,0x000000	; Couleur du crayon ; noir
+        call XSetForeground
+        ; coordonnées de la ligne 1 (noire)
+        movzx rsi, byte[i]
+        ;mov dword[x1],[tab1+rsi*BYTE]
+        ;mov dword[y1],[tab2+rsi*BYTE]
+        movzx rsi, byte[min_angle_index]
+        ;mov dword[x2],[tab1+rsi*BYTE]
+        ;mov dword[y2],[tab2+rsi*BYTE]
+        ; TODO: CORRGOER L'ERREUR
+        ; dessin de la ligne 1
+        mov rdi,qword[display_name]
+        mov rsi,qword[window]
+        mov rdx,qword[gc]
+        mov ecx,dword[x1]	; coordonnée source en x
+        mov r8d,dword[y1]	; coordonnée source en y
+        mov r9d,dword[x2]	; coordonnée destination en x
+        push qword[y2]		; coordonnée destination en y
+        call XDrawLine
+        ;;;
+
+        jmp verify_point_is_in_convex_hull
+
+
+
+
+verify_point_is_in_convex_hull:
+    ; TODO : vérifier si le point est dans l'enveloppe convexe
+
+    inc byte[j]
+    cmp byte[j], 10
+    jb jarivs_boucle_2
+
+
+    inc byte[i]
+    cmp byte[i], 10
+    jmp jarivs_boucle_1
+
+    jmp display_last_point_random
+
+;##################################################
+;########### LAST POINT RANDOM   ##################
+;##################################################
+
+display_last_point_random:
+    cmp byte[is_to_left], 1
+    jne display_last_point_random_is_not
+
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov edx,0x00FF00
+    call XSetForeground
+
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,qword[gc]
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
+    sub ecx,3
+    mov r8,[last_point_random_y] 		; coordonnée en y du point
+    sub r8,3
+    mov r9,6
+    mov rax,23040
+    push rax
+    push 0
+    push r9
+    call XFillArc
+
+    mov rdi,last_sense_is
+    movzx rsi,byte[last_point_random_x]
+    movzx rdx,byte[last_point_random_y]
+    mov rax,0
+    call printf
+
+
+display_last_point_random_is_not:
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov edx,0xFF0000
+    call XSetForeground
+
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,qword[gc]
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
+    sub ecx,3
+    mov r8,[last_point_random_y] 		; coordonnée en y du point
+    sub r8,3
+    mov r9,6
+    mov rax,23040
+    push rax
+    push 0
+    push r9
+    call XFillArc
+
+    mov rdi,last_sense_is_not
+    movzx rsi,byte[last_point_random_x]
+    movzx rdx,byte[last_point_random_y]
+    mov rax,0
+    call printf
