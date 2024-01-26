@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]
+then    echo "Usage : $0 fichier.asm"
+        exit
+fi
+
+extension=`echo $1 | awk -F . '{print $NF}'`
+if [ ${extension:-no} != "asm" ]
+then    echo "mauvaise extension : .asm requis"
+    exit
+fi
+
+if [ ! -f $1 ]
+then    echo "$1 n'existe pas"
+        exit
+fi
+
+nom=`basename $1 .asm`
+
+nasm -felf64 -Fdwarf -g $1 -o $nom.o
+if [ $? -eq 0 ]
+then    echo "Assemblage OK"
+        echo "Création de l'exécutable"
+        gcc -fPIC $nom.o -o $nom  -fno-pie -no-pie -z noexecstack  --for-linker /lib64/ld-linux-x86-64.so.2 -lX11
+        if [ $? -eq 0 ]
+        then    echo "Fichier exécutable '$nom' créé"
+            rm $nom.o
+        else    echo "Erreur d'édition de lien"
+        fi
+fi
