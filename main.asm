@@ -68,8 +68,8 @@ section .data
     last_sense_is_not: db "Le point (%d,%d) n'est pas contenu dans l'enveloppe",10,0
     point_max_left_print: db "index max gauche est %d",10,0
     display:  db  "t[%d]=%d",10,0
-    min_angle: db 0
     min_angle_index: db 0
+    last_min_angle_index: db 0
     max:	db	10
     swapped:	db	0
     xab:	db	0
@@ -319,33 +319,30 @@ jarivs_boucle_1:
     jmp jarivs_boucle_2
     mov byte[j], 0 ; reset
 
-
-
     jarivs_boucle_2:
 
-        ;;; xab
         movzx rsi, byte[j]
-        movzx rdx, byte[i]
+        movzx rdx, byte[last_min_angle_index]
         movzx rax, byte[tab1+rsi*BYTE]
         sub al, byte[tab1+rdx*BYTE]
         mov byte[xab], al
 
         ;;; yab
         movzx rsi, byte[j]
-        movzx rdx, byte[i]
+        movzx rdx, byte[last_min_angle_index]
         movzx rax, byte[tab2+rsi*BYTE]
         sub al, byte[tab2+rdx*BYTE]
         mov byte[yab], al
 
         ;;; xbc
-        movzx rsi, byte[i]
+        movzx rsi, byte[last_min_angle_index]
         movzx rdx, byte[j]
         movzx rax, byte[tab1+rsi*BYTE]
         sub al, byte[tab1+rdx*BYTE]
         mov byte[xbc], al
 
         ;;; ybc
-        movzx rsi, byte[i]
+        movzx rsi, byte[last_min_angle_index]
         movzx rdx, byte[j]
         movzx rax, byte[tab2+rsi*BYTE]
         sub al, byte[tab2+rdx*BYTE]
@@ -370,19 +367,30 @@ jarivs_boucle_1:
         mov byte[final_result_vectoriel], sil
 
 
+        cmp byte[final_result_vectoriel], 0
+        jne point_is_to_left
 
-        ; TODO : si c'est positif, alors le point est à gauche, sinon il est à droite
-        ; TODO : stocker le résultat dans la variable min_angle et l'index dans la variable min_angle_index
+        jmp point_is_to_right
+
+        point_is_to_right:
+            movzx rax, byte[j]
+            mov [min_angle_index], rax
+            jmp verify_point_is_in_convex_hull
+
+        point_is_to_left:
+            movzx rax, byte[j]
+            add rax, 1
+            mov [min_angle_index], rax
+            jmp verify_point_is_in_convex_hull
 
 
-        ;;;
-        ;couleur de la ligne 1
+        ;couleur de la ligne
         mov rdi,qword[display_name]
         mov rsi,qword[gc]
         mov edx,0x000000	; Couleur du crayon ; noir
         call XSetForeground
         ; coordonnées de la ligne 1 (noire)
-        movzx rsi, byte[i]
+        movzx rsi, byte[last_min_angle_index]
         ;mov dword[x1],[tab1+rsi*BYTE]
         ;mov dword[y1],[tab2+rsi*BYTE]
         movzx rsi, byte[min_angle_index]
@@ -400,6 +408,10 @@ jarivs_boucle_1:
         call XDrawLine
         ;;;
 
+
+        mov rax, [min_angle_index]
+        mov [last_min_angle_index], rax
+
         jmp verify_point_is_in_convex_hull
 
 
@@ -409,7 +421,7 @@ verify_point_is_in_convex_hull:
     ; TODO : vérifier si le point est dans l'enveloppe convexe
 
     inc byte[j]
-    cmp byte[j], 10
+    cmp byte[j], 9
     jb jarivs_boucle_2
 
 
