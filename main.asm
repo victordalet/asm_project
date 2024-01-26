@@ -194,7 +194,7 @@ display_array_2:
 
 
 ;##################################################
-;########### PROGRAMME PRINCIPAL ##################
+;########### DISPLAY            ##################
 ;##################################################
 xor     rdi,rdi
 call    XOpenDisplay	; Création de display
@@ -256,7 +256,7 @@ je closeDisplay						; on saute au label 'closeDisplay' qui ferme la fenêtre
 jmp boucle
 
 ;#########################################
-;#		DEBUT DE LA ZONE DE DESSIN		 #
+;#		DRAW                    		 #
 ;#########################################
 dessin:
 
@@ -286,6 +286,27 @@ dessin:
     cmp byte[i], 10
     jb dessin
 
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov edx,0x000000
+    call XSetForeground
+
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,qword[gc]
+    movzx rsi, byte[i]
+    mov rcx,[last_point_random_x]	; coordonnée en x du point
+    sub ecx,3
+    mov r8,[last_point_random_y]	; coordonnée en y du point
+    sub r8,3
+    mov r9,6
+    mov rax,23040
+    push rax
+    push 0
+    push r9
+    call XFillArc
+
     jmp flush
 
 flush:
@@ -301,4 +322,9 @@ closeDisplay:
     call    XCloseDisplay
     xor	    rdi,rdi
     call    exit
+
+
+;##################################################
+;########### JARVIS      ##################
+;##################################################
 	
