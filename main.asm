@@ -288,6 +288,8 @@ dessin:
     push r9
     call XFillArc
 
+    mov rdi,qword[display_name]
+    call XFlush
 
     inc byte[i]
     cmp byte[i], 10
@@ -321,32 +323,35 @@ jarivs_boucle_1:
 
     jarivs_boucle_2:
 
-        movzx rsi, byte[j]
-        movzx rdx, byte[last_min_angle_index]
+        ;;; xab
+        movzx rsi, byte[last_min_angle_index]
         movzx rax, byte[tab1+rsi*BYTE]
-        sub al, byte[tab1+rdx*BYTE]
-        mov byte[xab], al
+        movzx rsi, byte[j]
+        sub rax, [tab1+rdx*BYTE]
+        mov [xab], rax
 
         ;;; yab
-        movzx rsi, byte[j]
-        movzx rdx, byte[last_min_angle_index]
+        movzx rsi, byte[last_min_angle_index]
         movzx rax, byte[tab2+rsi*BYTE]
-        sub al, byte[tab2+rdx*BYTE]
-        mov byte[yab], al
+        movzx rsi, byte[j]
+        sub rax, [tab2+rsi*BYTE]
+        mov [yab], rax
 
         ;;; xbc
         movzx rsi, byte[last_min_angle_index]
-        movzx rdx, byte[j]
         movzx rax, byte[tab1+rsi*BYTE]
-        sub al, byte[tab1+rdx*BYTE]
-        mov byte[xbc], al
+        movzx rsi, byte[j]
+        add rsi, 1
+        sub rax, [tab1+rsi*BYTE]
+        mov [xbc], rax
 
         ;;; ybc
         movzx rsi, byte[last_min_angle_index]
-        movzx rdx, byte[j]
         movzx rax, byte[tab2+rsi*BYTE]
-        sub al, byte[tab2+rdx*BYTE]
-        mov byte[ybc], al
+        movzx rsi, byte[j]
+        add rsi, 1
+        sub rax, [tab2+rdx*BYTE]
+        mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
         movzx rsi, byte[xbc]
@@ -385,27 +390,27 @@ jarivs_boucle_1:
 
 
         ;couleur de la ligne
-        mov rdi,qword[display_name]
-        mov rsi,qword[gc]
-        mov edx,0x000000	; Couleur du crayon ; noir
-        call XSetForeground
+        ;mov rdi,qword[display_name]
+        ;mov rsi,qword[gc]
+        ;mov edx,0x000000	; Couleur du crayon ; noir
+        ;call XSetForeground
         ; coordonnées de la ligne 1 (noire)
-        movzx rsi, byte[last_min_angle_index]
+        ;movzx rsi, byte[last_min_angle_index]
         ;mov dword[x1],[tab1+rsi*BYTE]
         ;mov dword[y1],[tab2+rsi*BYTE]
-        movzx rsi, byte[min_angle_index]
+        ;movzx rsi, byte[min_angle_index]
         ;mov dword[x2],[tab1+rsi*BYTE]
         ;mov dword[y2],[tab2+rsi*BYTE]
         ; TODO: CORRGOER L'ERREUR
         ; dessin de la ligne 1
-        mov rdi,qword[display_name]
-        mov rsi,qword[window]
-        mov rdx,qword[gc]
-        mov ecx,dword[x1]	; coordonnée source en x
-        mov r8d,dword[y1]	; coordonnée source en y
-        mov r9d,dword[x2]	; coordonnée destination en x
-        push qword[y2]		; coordonnée destination en y
-        call XDrawLine
+        ;mov rdi,qword[display_name]
+        ;mov rsi,qword[window]
+        ;mov rdx,qword[gc]
+        ;mov ecx,dword[x1]	; coordonnée source en x
+        ;mov r8d,dword[y1]	; coordonnée source en y
+        ;mov r9d,dword[x2]	; coordonnée destination en x
+        ;push qword[y2]		; coordonnée destination en y
+        ;call XDrawLine
         ;;;
 
 
@@ -418,7 +423,26 @@ jarivs_boucle_1:
 
 
 verify_point_is_in_convex_hull:
-    ; TODO : vérifier si le point est dans l'enveloppe convexe
+    mov rax, [final_result_vectoriel]
+    cmp rax, 0
+    jb modify_point_is_in_convex_hull
+
+
+
+    inc byte[j]
+    cmp byte[j], 9
+    jb jarivs_boucle_2
+
+
+    inc byte[i]
+    cmp byte[i], 10
+    jmp jarivs_boucle_1
+
+    jmp display_last_point_random
+
+
+modify_point_is_in_convex_hull:
+    mov byte[is_to_left], 1
 
     inc byte[j]
     cmp byte[j], 9
