@@ -67,6 +67,7 @@ section .data
     last_sense_is: db "Le point (%d,%d) est cp,te,i dans l'enveloppe",10,0
     last_sense_is_not: db "Le point (%d,%d) n'est pas contenu dans l'enveloppe",10,0
     point_max_left_print: db "index max gauche est %d",10,0
+    result_vectoriel_print: db "result vectoriel est %d",10,0
     display:  db  "t[%d]=%d",10,0
     min_angle_index: db 0
     last_min_angle_index: db 0
@@ -197,6 +198,8 @@ display_array_2:
 
     mov byte[i], 0 ; reset i
 
+    ;jmp jarivs_boucle_1
+
 
 
 ; en assembleur réinitilise les registre pour le bon fonctionnement du graphic
@@ -282,7 +285,6 @@ dessin:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    ; change la ligne movzx rsi, byte[i] par un autre registre car le registre rsi est utiliser par la fonction XDrawLine ; ca donne  :
 
     movzx rax, byte[i]
     mov rcx,[tab1+rax*BYTE]		; coordonnée en x du point
@@ -377,6 +379,12 @@ jarivs_boucle_1:
         sub sil, dil
         mov byte[final_result_vectoriel], sil
 
+        ;;; display result vectoriel
+        mov rdi, result_vectoriel_print
+        movzx rsi, byte[final_result_vectoriel]
+        mov rax, 0
+        call printf
+
 
         cmp byte[final_result_vectoriel], 0
         jne point_is_to_left
@@ -439,10 +447,10 @@ verify_point_is_in_convex_hull:
     cmp byte[j], 9
     jb jarivs_boucle_2
 
-
+    mov byte[j], 0 ; reset j
     inc byte[i]
     cmp byte[i], 10
-    jmp jarivs_boucle_1
+    jb jarivs_boucle_1
 
     jmp display_last_point_random
 
@@ -454,10 +462,10 @@ modify_point_is_in_convex_hull:
     cmp byte[j], 9
     jb jarivs_boucle_2
 
-
+    mov byte[j], 0 ; reset j
     inc byte[i]
     cmp byte[i], 10
-    jmp jarivs_boucle_1
+    jb jarivs_boucle_1
 
     jmp display_last_point_random
 
