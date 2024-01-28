@@ -332,58 +332,59 @@ jarivs_boucle_1:
     jarivs_boucle_2:
 
         ;;; xab
-        movzx rsi, byte[last_min_angle_index]
-        movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[j]
-        sub rax, [tab1+rdx*BYTE]
+        ; TODO: ne pas utiliser rsi
+        movzx rbx, byte[last_min_angle_index]
+        movzx rax, byte[tab1+rbx*BYTE]
+        movzx rbx, byte[j]
+        sub rax, [tab1+rbx*BYTE]
         mov [xab], rax
 
         ;;; yab
-        movzx rsi, byte[last_min_angle_index]
-        movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[j]
-        sub rax, [tab2+rsi*BYTE]
+        movzx rbx, byte[last_min_angle_index]
+        movzx rax, byte[tab2+rbx*BYTE]
+        movzx rbx, byte[j]
+        sub rax, [tab2+rbx*BYTE]
         mov [yab], rax
 
         ;;; xbc
-        movzx rsi, byte[last_min_angle_index]
-        movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[j]
-        add rsi, 1
-        sub rax, [tab1+rsi*BYTE]
+        movzx rbx, byte[last_min_angle_index]
+        movzx rax, byte[tab1+rbx*BYTE]
+        movzx rbx, byte[j]
+        add rbx, 1
+        sub rax, [tab1+rbx*BYTE]
         mov [xbc], rax
 
         ;;; ybc
-        movzx rsi, byte[last_min_angle_index]
-        movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[j]
-        add rsi, 1
-        sub rax, [tab2+rdx*BYTE]
+        movzx rbx, byte[last_min_angle_index]
+        movzx rax, byte[tab2+rbx*BYTE]
+        movzx rbx, byte[j]
+        add rbx, 1
+        sub rax, [tab2+rbx*BYTE]
         mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
-        movzx rsi, byte[xbc]
-        movzx rdx, byte[yab]
-        imul rsi, rdx
+        movzx rax, byte[xbc]
+        movzx rbx, byte[yab]
+        imul rax, rbx
         mov byte[result_vectoriel_xbc_yab], sil
 
         ;;; produit vectoriel xab ybc
-        movzx rsi, byte[xab]
-        movzx rdx, byte[ybc]
-        imul rsi, rdx
+        movzx rax, byte[xab]
+        movzx rbx, byte[ybc]
+        imul rax, rbx
         mov byte[result_vectoriel_ybc_xab], sil
 
         ;;; final result vectoriel
-        movzx rsi, byte[result_vectoriel_xbc_yab]
-        movzx rdx, byte[result_vectoriel_ybc_xab]
-        sub sil, dil
-        mov byte[final_result_vectoriel], sil
+        movzx rax, byte[result_vectoriel_xbc_yab]
+        movzx rbx, byte[result_vectoriel_ybc_xab]
+        sub rax, rbx
+        mov [final_result_vectoriel], rax
 
         ;;; display result vectoriel
-        mov rdi, result_vectoriel_print
-        movzx rsi, byte[final_result_vectoriel]
-        mov rax, 0
-        call printf
+        ;mov rdi, result_vectoriel_print
+        ;movzx rsi, byte[final_result_vectoriel]
+        ;mov rax, 0
+        ;call printf
 
 
         cmp byte[final_result_vectoriel], 0
@@ -504,6 +505,8 @@ display_last_point_random:
     mov rax,0
     call printf
 
+    jmp flush
+
 
 display_last_point_random_is_not:
 
@@ -532,3 +535,5 @@ display_last_point_random_is_not:
     movzx rdx,byte[last_point_random_y]
     mov rax,0
     call printf
+
+    jmp flush
