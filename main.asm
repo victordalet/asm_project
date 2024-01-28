@@ -499,12 +499,6 @@ display_last_point_random:
     push r9
     call XFillArc
 
-    mov rdi,last_sense_is
-    movzx rsi,byte[last_point_random_x]
-    movzx rdx,byte[last_point_random_y]
-    mov rax,0
-    call printf
-
     jmp flush
 
 
@@ -529,11 +523,5 @@ display_last_point_random_is_not:
     push 0
     push r9
     call XFillArc
-
-    mov rdi,last_sense_is_not
-    movzx rsi,byte[last_point_random_x]
-    movzx rdx,byte[last_point_random_y]
-    mov rax,0
-    call printf
 
     jmp flush
