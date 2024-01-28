@@ -46,6 +46,7 @@ section .bss
 
     tab1:   resb    10
     tab2:   resb    10
+    tabindex:   resb    10
     val:    resb    1
     last_point_random_x : resd 1
     last_point_random_y : resd 1
@@ -198,66 +199,203 @@ display_array_2:
 
     mov byte[i], 0 ; reset i
 
-    ;jmp jarivs_boucle_1
+    jmp jarivs_boucle_1
+
+
+display_array_3:
+    mov rdi, display
+    movzx rsi, byte[i]
+    movzx rdx, byte[tabindex+rsi*BYTE]
+    mov rax, 0
+    call printf
+
+    inc byte[i]
+    cmp byte[i], 10
+    jb display_array_3
+
+    mov byte[i], 0 ; reset i
+    jmp draw
 
 
 
-; en assembleur réinitilise les registre pour le bon fonctionnement du graphic
-mov rax,0
-mov rbx,0
-mov rcx,0
-mov rdx,0
-mov rsi,0
-mov rdi,0
 ;##################################################
-;########### DISPLAY            ##################
+;########### JARVIS      ##################
 ;##################################################
-xor     rdi,rdi
-call    XOpenDisplay	; Création de display
-mov     qword[display_name],rax	; rax=nom du display
 
-; display_name structure
-; screen = DefaultScreen(display_name);
-mov     rax,qword[display_name]
-mov     eax,dword[rax+0xe0]
-mov     dword[screen],eax
+jarivs_boucle_1:
 
-mov rdi,qword[display_name]
-mov esi,dword[screen]
-call XRootWindow
-mov rbx,rax
+    jmp jarivs_boucle_2
 
-mov rdi,qword[display_name]
-mov rsi,rbx
-mov rdx,10
-mov rcx,10
-mov r8,400	; largeur
-mov r9,400	; hauteur
-push 0xFFFFFF	; background  0xRRGGBB
-push 0x00FF00
-push 1
-call XCreateSimpleWindow
-mov qword[window],rax
+    jarivs_boucle_2:
 
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,131077 ;131072
-call XSelectInput
+        movzx rsi, byte[last_min_angle_index]
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[j]
+        sub rax, [tab1+rdx*BYTE]
+        mov [xab], rax
+        ;;; yab
+        movzx rsi, byte[last_min_angle_index]
+        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rsi, byte[j]
+        sub rax, [tab2+rsi*BYTE]
+        mov [yab], rax
+        ;;; xbc
+        movzx rsi, byte[last_min_angle_index]
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[j]
+        add rsi, 1
+        sub rax, [tab1+rsi*BYTE]
+        mov [xbc], rax
+        ;;; ybc
+        movzx rsi, byte[last_min_angle_index]
+        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rsi, byte[j]
+        add rsi, 1
+        sub rax, [tab2+rdx*BYTE]
+        mov [ybc], rax
+        ;;; produit vectoriel xbc yab
+        movzx rsi, byte[xbc]
+        movzx rdx, byte[yab]
+        imul rsi, rdx
+        mov byte[result_vectoriel_xbc_yab], sil
+        ;;; produit vectoriel xab ybc
+        movzx rsi, byte[xab]
+        movzx rdx, byte[ybc]
+        imul rsi, rdx
+        mov byte[result_vectoriel_ybc_xab], sil
+        ;;; final result vectoriel
+        movzx rsi, byte[result_vectoriel_xbc_yab]
+        movzx rdx, byte[result_vectoriel_ybc_xab]
+        sub sil, dil
+        mov byte[final_result_vectoriel], sil
 
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-call XMapWindow
 
-mov rsi,qword[window]
-mov rdx,0
-mov rcx,0
-call XCreateGC
-mov qword[gc],rax
+        cmp byte[final_result_vectoriel], 0
+        jne point_is_to_left
 
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov rdx,0x000000	; Couleur du crayon
-call XSetForeground
+        jmp point_is_to_right
+
+        point_is_to_right:
+            movzx rax, byte[j]
+            add rax, 1
+            mov [min_angle_index], rax
+
+            movzx ecx, byte[i]
+            mov rax, [min_angle_index]
+            mov [tabindex+ecx*BYTE], rax
+            jmp verify_point_is_in_convex_hull
+
+        point_is_to_left:
+
+            movzx ecx, byte[i]
+            mov rax, [min_angle_index]
+            mov [tabindex+ecx*BYTE], rax
+            jmp verify_point_is_in_convex_hull
+
+
+        mov rax, [min_angle_index]
+        mov [last_min_angle_index], rax
+
+        jmp verify_point_is_in_convex_hull
+
+
+
+
+verify_point_is_in_convex_hull:
+    mov rax, [final_result_vectoriel]
+    cmp rax, 0
+    jb modify_point_is_in_convex_hull
+
+
+
+    inc byte[j]
+    cmp byte[j], 9
+    jb jarivs_boucle_2
+
+    mov byte[j], 0 ; reset j
+    inc byte[i]
+    cmp byte[i], 10
+    jb jarivs_boucle_1
+
+    mov byte[i], 0 ; reset i
+    jmp display_array_3
+
+
+modify_point_is_in_convex_hull:
+    mov byte[is_to_left], 1
+
+    inc byte[j]
+    cmp byte[j], 9
+    jb jarivs_boucle_2
+
+    mov byte[j], 0 ; reset j
+    inc byte[i]
+    cmp byte[i], 10
+    jb jarivs_boucle_1
+
+    mov byte[i], 0 ; reset i
+    jmp display_array_3
+
+
+;##################################################
+;########### REINIT            ##################
+;##################################################
+draw:
+    mov rax,0
+    mov rbx,0
+    mov rcx,0
+    mov rdx,0
+    mov rsi,0
+    mov rdi,0
+    ;##################################################
+    ;########### DISPLAY            ##################
+    ;##################################################
+    xor     rdi,rdi
+    call    XOpenDisplay	; Création de display
+    mov     qword[display_name],rax	; rax=nom du display
+
+    ; display_name structure
+    ; screen = DefaultScreen(display_name);
+    mov     rax,qword[display_name]
+    mov     eax,dword[rax+0xe0]
+    mov     dword[screen],eax
+
+    mov rdi,qword[display_name]
+    mov esi,dword[screen]
+    call XRootWindow
+    mov rbx,rax
+
+    mov rdi,qword[display_name]
+    mov rsi,rbx
+    mov rdx,10
+    mov rcx,10
+    mov r8,400	; largeur
+    mov r9,400	; hauteur
+    push 0xFFFFFF	; background  0xRRGGBB
+    push 0x00FF00
+    push 1
+    call XCreateSimpleWindow
+    mov qword[window],rax
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,131077 ;131072
+    call XSelectInput
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    call XMapWindow
+
+    mov rsi,qword[window]
+    mov rdx,0
+    mov rcx,0
+    call XCreateGC
+    mov qword[gc],rax
+
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov rdx,0x000000	; Couleur du crayon
+    call XSetForeground
 
 boucle: ; boucle de gestion des évènements
 mov rdi,qword[display_name]
@@ -298,13 +436,39 @@ dessin:
     push r9
     call XFillArc
 
+    ;;; LIGNES
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov edx,0xFFAA00	; Couleur du crayon ; orange
+    call XSetForeground
+    ; coordonnées de la ligne 1 (noire)
+    movzx rbx, byte[i]
+    movzx rax, byte[tabindex+rbx*BYTE]
+    mov dword[x1],300 ; [tab1+rax*BYTE]
+    mov dword[y1],200 ; [tab2+rax*BYTE]
+    movzx rbx, byte[i]
+    add rbx, 1
+    movzx rax, byte[tabindex+rbx*BYTE]
+    mov dword[x2], 50;[tab1+rax*BYTE]
+    mov dword[y2], 50;[tab2+rax*BYTE]
+    ; dessin de la ligne 1
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,qword[gc]
+    mov ecx,dword[x1]	; coordonnée source en x
+    mov r8d,dword[y1]	; coordonnée source en y
+    mov r9d,dword[x2]	; coordonnée destination en x
+    push qword[y2]		; coordonnée destination en y
+    call XDrawLine
+
     inc byte[i]
     cmp byte[i], 10
     jb dessin
 
-    jmp jarivs_boucle_1
-
     jmp flush
+
+
+
 
 flush:
 mov rdi,qword[display_name]
@@ -321,154 +485,6 @@ closeDisplay:
     call    exit
 
 
-;##################################################
-;########### JARVIS      ##################
-;##################################################
-	
-jarivs_boucle_1:
-
-    jmp jarivs_boucle_2
-
-    jarivs_boucle_2:
-
-        ;;; xab
-        ; TODO: ne pas utiliser rsi
-        movzx rbx, byte[last_min_angle_index]
-        movzx rax, byte[tab1+rbx*BYTE]
-        movzx rbx, byte[j]
-        sub rax, [tab1+rbx*BYTE]
-        mov [xab], rax
-
-        ;;; yab
-        movzx rbx, byte[last_min_angle_index]
-        movzx rax, byte[tab2+rbx*BYTE]
-        movzx rbx, byte[j]
-        sub rax, [tab2+rbx*BYTE]
-        mov [yab], rax
-
-        ;;; xbc
-        movzx rbx, byte[last_min_angle_index]
-        movzx rax, byte[tab1+rbx*BYTE]
-        movzx rbx, byte[j]
-        add rbx, 1
-        sub rax, [tab1+rbx*BYTE]
-        mov [xbc], rax
-
-        ;;; ybc
-        movzx rbx, byte[last_min_angle_index]
-        movzx rax, byte[tab2+rbx*BYTE]
-        movzx rbx, byte[j]
-        add rbx, 1
-        sub rax, [tab2+rbx*BYTE]
-        mov [ybc], rax
-
-        ;;; produit vectoriel xbc yab
-        movzx rax, byte[xbc]
-        movzx rbx, byte[yab]
-        imul rax, rbx
-        mov byte[result_vectoriel_xbc_yab], sil
-
-        ;;; produit vectoriel xab ybc
-        movzx rax, byte[xab]
-        movzx rbx, byte[ybc]
-        imul rax, rbx
-        mov byte[result_vectoriel_ybc_xab], sil
-
-        ;;; final result vectoriel
-        movzx rax, byte[result_vectoriel_xbc_yab]
-        movzx rbx, byte[result_vectoriel_ybc_xab]
-        sub rax, rbx
-        mov [final_result_vectoriel], rax
-
-        ;;; display result vectoriel
-        ;mov rdi, result_vectoriel_print
-        ;movzx rsi, byte[final_result_vectoriel]
-        ;mov rax, 0
-        ;call printf
-
-
-        cmp byte[final_result_vectoriel], 0
-        jne point_is_to_left
-
-        jmp point_is_to_right
-
-        point_is_to_right:
-            movzx rax, byte[j]
-            mov [min_angle_index], rax
-            jmp verify_point_is_in_convex_hull
-
-        point_is_to_left:
-            movzx rax, byte[j]
-            add rax, 1
-            mov [min_angle_index], rax
-            jmp verify_point_is_in_convex_hull
-
-
-        ;couleur de la ligne
-        ;mov rdi,qword[display_name]
-        ;mov rsi,qword[gc]
-        ;mov edx,0x000000	; Couleur du crayon ; noir
-        ;call XSetForeground
-        ; coordonnées de la ligne 1 (noire)
-        ;movzx rsi, byte[last_min_angle_index]
-        ;mov dword[x1],[tab1+rsi*BYTE]
-        ;mov dword[y1],[tab2+rsi*BYTE]
-        ;movzx rsi, byte[min_angle_index]
-        ;mov dword[x2],[tab1+rsi*BYTE]
-        ;mov dword[y2],[tab2+rsi*BYTE]
-        ; TODO: CORRGOER L'ERREUR
-        ; dessin de la ligne 1
-        ;mov rdi,qword[display_name]
-        ;mov rsi,qword[window]
-        ;mov rdx,qword[gc]
-        ;mov ecx,dword[x1]	; coordonnée source en x
-        ;mov r8d,dword[y1]	; coordonnée source en y
-        ;mov r9d,dword[x2]	; coordonnée destination en x
-        ;push qword[y2]		; coordonnée destination en y
-        ;call XDrawLine
-        ;;;
-
-
-        mov rax, [min_angle_index]
-        mov [last_min_angle_index], rax
-
-        jmp verify_point_is_in_convex_hull
-
-
-
-
-verify_point_is_in_convex_hull:
-    mov rax, [final_result_vectoriel]
-    cmp rax, 0
-    jb modify_point_is_in_convex_hull
-
-
-
-    inc byte[j]
-    cmp byte[j], 9
-    jb jarivs_boucle_2
-
-    mov byte[j], 0 ; reset j
-    inc byte[i]
-    cmp byte[i], 10
-    jb jarivs_boucle_1
-
-    jmp display_last_point_random
-
-
-modify_point_is_in_convex_hull:
-    mov byte[is_to_left], 1
-
-    inc byte[j]
-    cmp byte[j], 9
-    jb jarivs_boucle_2
-
-    mov byte[j], 0 ; reset j
-    inc byte[i]
-    cmp byte[i], 10
-    jb jarivs_boucle_1
-
-    jmp display_last_point_random
 
 ;##################################################
 ;########### LAST POINT RANDOM   ##################
@@ -499,7 +515,7 @@ display_last_point_random:
     push r9
     call XFillArc
 
-    jmp flush
+    jmp display_array_3
 
 
 display_last_point_random_is_not:
@@ -524,4 +540,4 @@ display_last_point_random_is_not:
     push r9
     call XFillArc
 
-    jmp flush
+    jmp display_array_3
