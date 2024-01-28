@@ -441,17 +441,17 @@ dessin:
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov ax, [tab1+rax*BYTE]
-    mov [x1], ax
-    mov ax, [tab2+rax*BYTE]
-    mov [y1], ax
+    mov rcx, [tab1+rax*BYTE]
+    mov [x1], rcx
+    mov rcx, [tab2+rax*BYTE]
+    mov [y1], rcx
     movzx rbx, byte[i]
     add rbx, 1
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov ax, [tab1+rax*BYTE]
-    mov [x2], ax
-    mov ax, [tab2+rax*BYTE]
-    mov [y2], ax
+    mov rcx, [tab1+rax*BYTE]
+    mov [x2], rcx
+    mov rcx, [tab2+rax*BYTE]
+    mov [y2], rcx
     ; dessin de la ligne 1
     mov rdi,qword[display_name]
     mov rsi,qword[window]
