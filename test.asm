@@ -228,7 +228,7 @@ dessin:
 mov rdi,qword[display_name]
 mov rsi,qword[gc]
 
-mov edx,0x0000FF	; Couleur du crayon bleu
+mov edx,0x0000	; Couleur du crayon bleu
 
 call XSetForeground
 

@@ -91,7 +91,6 @@ main:
 ;##################################################
 init_array_1:
     ; init last radnom point
-    rdrand rax
     mov [last_point_random_x], rax
     rdrand rax
     mov [last_point_random_y], rax
@@ -413,9 +412,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx,[tab1+rax*BYTE]		; coordonnée en x du point
+    mov rcx,qword[tab1+rax*BYTE]		; coordonnée en x du point
     sub ecx,3
-    mov r8,[tab2+rax*BYTE] 		; coordonnée en y du point
+    mov r8,qword[tab2+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
