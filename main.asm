@@ -465,7 +465,8 @@ dessin:
     cmp byte[i], 10
     jb dessin
 
-    jmp flush
+    jmp display_last_point_random
+
 
 
 
@@ -515,7 +516,7 @@ display_last_point_random:
     push r9
     call XFillArc
 
-    jmp display_array_3
+    jmp flush
 
 
 display_last_point_random_is_not:
@@ -540,4 +541,4 @@ display_last_point_random_is_not:
     push r9
     call XFillArc
 
-    jmp display_array_3
+    jmp flush
