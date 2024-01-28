@@ -282,10 +282,12 @@ dessin:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    movzx rsi, byte[i]
-    mov rcx,[tab1+rsi*BYTE]		; coordonnée en x du point
+    ; change la ligne movzx rsi, byte[i] par un autre registre car le registre rsi est utiliser par la fonction XDrawLine ; ca donne  :
+
+    movzx rax, byte[i]
+    mov rcx,[tab1+rax*BYTE]		; coordonnée en x du point
     sub ecx,3
-    mov r8,[tab2+rsi*BYTE] 		; coordonnée en y du point
+    mov r8,[tab2+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -293,9 +295,6 @@ dessin:
     push 0
     push r9
     call XFillArc
-
-    mov rdi,qword[display_name]
-    call XFlush
 
     inc byte[i]
     cmp byte[i], 10
