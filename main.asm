@@ -1,4 +1,3 @@
-; external functions from X11 library
 extern XOpenDisplay
 extern XDisplayName
 extern XCloseDisplay
@@ -14,7 +13,6 @@ extern XDrawPoint
 extern XFillArc
 extern XNextEvent
 
-; external functions from stdio library (ld-linux-x86-64.so.2)    
 extern printf
 extern exit
 
@@ -31,6 +29,7 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
+%define NB_POINTS 30
 
 global main
 
@@ -44,9 +43,9 @@ section .bss
     window:		resq	1
     gc:		resq	1
 
-    tab1:   resb    10
-    tab2:   resb    10
-    tabindex:   resb    10
+    tab1:   resb   NB_POINTS
+    tab2:   resb    NB_POINTS
+    tabindex:   resb    NB_POINTS
     val:    resb    1
     last_point_random_x : resd 1
     last_point_random_y : resd 1
@@ -104,7 +103,7 @@ init_array_1:
     mov [tab1+ecx*BYTE], rax
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb init_array_1
 
     mov byte[i], 0 ; reset i
@@ -151,7 +150,7 @@ display_array_1:
     call printf
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb display_array_1
 
     mov byte[i], 0 ; reset i
@@ -165,7 +164,7 @@ init_array_2:
     mov [tab2+ecx*BYTE], rax
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb init_array_2
 
     mov byte[i], 0 ; reset i
@@ -182,7 +181,7 @@ display_array_2:
     call printf
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb display_array_2
 
     ; display last random point
@@ -210,7 +209,7 @@ display_array_3:
     call printf
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb display_array_3
 
     mov byte[i], 0 ; reset i
@@ -263,29 +262,29 @@ jarivs_boucle_1:
         movzx rdx, byte[ybc]
         imul rsi, rdx
         mov byte[result_vectoriel_ybc_xab], sil
+
         ;;; final result vectoriel
-        movzx rsi, byte[result_vectoriel_xbc_yab]
-        movzx rdx, byte[result_vectoriel_ybc_xab]
-        sub sil, dil
-        mov byte[final_result_vectoriel], sil
+        mov rax, [result_vectoriel_xbc_yab]
+        mov rbx, [result_vectoriel_ybc_xab]
+        sub rax, rbx
+        mov [final_result_vectoriel], rax
 
 
         cmp byte[final_result_vectoriel], 0
-        jne point_is_to_left
+        jb point_is_to_left
 
         jmp point_is_to_right
 
         point_is_to_right:
-            movzx rax, byte[j]
-            add rax, 1
-            mov [min_angle_index], rax
-
             movzx ecx, byte[i]
             mov rax, [min_angle_index]
             mov [tabindex+ecx*BYTE], rax
             jmp verify_point_is_in_convex_hull
 
         point_is_to_left:
+            movzx rax, byte[j]
+            add rax, 1
+            mov [min_angle_index], rax
 
             movzx ecx, byte[i]
             mov rax, [min_angle_index]
@@ -307,14 +306,13 @@ verify_point_is_in_convex_hull:
     jb modify_point_is_in_convex_hull
 
 
-
     inc byte[j]
-    cmp byte[j], 9
+    cmp byte[j], NB_POINTS ;// todo : -1
     jb jarivs_boucle_2
 
     mov byte[j], 0 ; reset j
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb jarivs_boucle_1
 
     mov byte[i], 0 ; reset i
@@ -325,12 +323,12 @@ modify_point_is_in_convex_hull:
     mov byte[is_to_left], 1
 
     inc byte[j]
-    cmp byte[j], 9
+    cmp byte[j], NB_POINTS ;// todo : -1
     jb jarivs_boucle_2
 
     mov byte[j], 0 ; reset j
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb jarivs_boucle_1
 
     mov byte[i], 0 ; reset i
@@ -462,12 +460,10 @@ dessin:
     call XDrawLine
 
     inc byte[i]
-    cmp byte[i], 10
+    cmp byte[i], NB_POINTS
     jb dessin
 
     jmp display_last_point_random
-
-
 
 
 
