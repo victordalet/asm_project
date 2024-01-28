@@ -297,7 +297,9 @@ verify_point_is_in_convex_hull:
     jb modify_point_is_in_convex_hull
 
 
-    inc byte[j]
+    mov rax, [j]
+    add rax, 2
+    mov [j], rax
     cmp byte[j], NB_POINTS
     jb jarivs_boucle_2
 
@@ -313,7 +315,9 @@ verify_point_is_in_convex_hull:
 modify_point_is_in_convex_hull:
     mov byte[is_to_left], 1
 
-    inc byte[j]
+    mov rax, [j]
+    add rax, 2
+    mov [j], rax
     cmp byte[j], NB_POINTS
     jb jarivs_boucle_2
 
@@ -412,9 +416,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx,qword[tab1+rax*BYTE]		; coordonnée en x du point
+    mov rcx, [tab1+rax*BYTE]		; coordonnée en x du point
     sub ecx,3
-    mov r8,qword[tab2+rax*BYTE] 		; coordonnée en y du point
+    mov r8, [tab2+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
