@@ -199,7 +199,13 @@ display_array_2:
 
 
 
-
+; en assembleur réinitilise les registre pour le bon fonctionnement du graphic
+mov rax,0
+mov rbx,0
+mov rcx,0
+mov rdx,0
+mov rsi,0
+mov rdi,0
 ;##################################################
 ;########### DISPLAY            ##################
 ;##################################################
