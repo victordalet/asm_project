@@ -257,7 +257,7 @@ jarivs_boucle_1:
         movzx rdx, byte[yab]
         imul rsi, rdx
         mov byte[result_vectoriel_xbc_yab], sil
-        ;;; produit vectoriel xab ybc
+        ;;; produit vectoriel xab ybc le produit peut être négatif
         movzx rsi, byte[xab]
         movzx rdx, byte[ybc]
         imul rsi, rdx
@@ -271,14 +271,16 @@ jarivs_boucle_1:
 
 
         cmp byte[final_result_vectoriel], 0
-        jb point_is_to_left
+        jbe point_is_to_left
 
         jmp point_is_to_right
 
         point_is_to_right:
-            movzx ecx, byte[i]
-            mov rax, [min_angle_index]
-            mov [tabindex+ecx*BYTE], rax
+            movzx rax, byte[i]
+            mov [min_angle_index], rax
+
+            movzx rsi, byte[i]
+            mov [tabindex+rsi*BYTE], rax
             jmp verify_point_is_in_convex_hull
 
         point_is_to_left:
@@ -286,9 +288,8 @@ jarivs_boucle_1:
             add rax, 1
             mov [min_angle_index], rax
 
-            movzx ecx, byte[i]
-            mov rax, [min_angle_index]
-            mov [tabindex+ecx*BYTE], rax
+            movzx rsi, byte[i]
+            mov [tabindex+rsi*BYTE], rax
             jmp verify_point_is_in_convex_hull
 
 
@@ -336,7 +337,7 @@ modify_point_is_in_convex_hull:
 
 
 ;##################################################
-;########### REINIT            ##################
+;########### DISPLAY            ##################
 ;##################################################
 draw:
     mov rax,0
@@ -345,9 +346,7 @@ draw:
     mov rdx,0
     mov rsi,0
     mov rdi,0
-    ;##################################################
-    ;########### DISPLAY            ##################
-    ;##################################################
+
     xor     rdi,rdi
     call    XOpenDisplay	; Création de display
     mov     qword[display_name],rax	; rax=nom du display
@@ -442,13 +441,17 @@ dessin:
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov dword[x1],300 ; [tab1+rax*BYTE]
-    mov dword[y1],200 ; [tab2+rax*BYTE]
+    mov ax, [tab1+rax*BYTE]
+    mov [x1], ax
+    mov ax, [tab2+rax*BYTE]
+    mov [y1], ax
     movzx rbx, byte[i]
     add rbx, 1
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov dword[x2], 50;[tab1+rax*BYTE]
-    mov dword[y2], 50;[tab2+rax*BYTE]
+    mov ax, [tab1+rax*BYTE]
+    mov [x2], ax
+    mov ax, [tab2+rax*BYTE]
+    mov [y2], ax
     ; dessin de la ligne 1
     mov rdi,qword[display_name]
     mov rsi,qword[window]
