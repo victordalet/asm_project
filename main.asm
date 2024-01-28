@@ -29,7 +29,7 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
-%define NB_POINTS 30
+%define NB_POINTS 50
 
 global main
 
@@ -227,10 +227,17 @@ jarivs_boucle_1:
 
     jarivs_boucle_2:
 
+        ; ne pas prendre en compte le point lui même
+        movzx rsi, byte[i]
+        movzx rax, byte[j]
+        cmp rax, rsi
+        jne verify_point_is_in_convex_hull
+
+        ;;; xab
         movzx rsi, byte[last_min_angle_index]
         movzx rax, byte[tab1+rsi*BYTE]
         movzx rsi, byte[j]
-        sub rax, [tab1+rdx*BYTE]
+        sub rax, [tab1+rsi*BYTE]
         mov [xab], rax
         ;;; yab
         movzx rsi, byte[last_min_angle_index]
@@ -250,53 +257,37 @@ jarivs_boucle_1:
         movzx rax, byte[tab2+rsi*BYTE]
         movzx rsi, byte[j]
         add rsi, 1
-        sub rax, [tab2+rdx*BYTE]
+        sub rax, [tab2+rsi*BYTE]
         mov [ybc], rax
         ;;; produit vectoriel xbc yab
         movzx rsi, byte[xbc]
         movzx rdx, byte[yab]
-        imul rsi, rdx
-        mov byte[result_vectoriel_xbc_yab], sil
-        ;;; produit vectoriel xab ybc le produit peut être négatif
+        mul rdx
+        mov [result_vectoriel_xbc_yab], rsi
+
+        ;;; produit vectoriel xab ybc
         movzx rsi, byte[xab]
         movzx rdx, byte[ybc]
-        imul rsi, rdx
-        mov byte[result_vectoriel_ybc_xab], sil
+        mul rdx
+        mov [result_vectoriel_ybc_xab], rsi
 
-        ;;; final result vectoriel
+
         mov rax, [result_vectoriel_xbc_yab]
-        mov rbx, [result_vectoriel_ybc_xab]
-        sub rax, rbx
-        mov [final_result_vectoriel], rax
-
-
-        cmp byte[final_result_vectoriel], 0
-        jbe point_is_to_left
-
-        jmp point_is_to_right
-
-        point_is_to_right:
-            movzx rax, byte[i]
-            mov [min_angle_index], rax
-
-            movzx rsi, byte[i]
-            mov [tabindex+rsi*BYTE], rax
-            jmp verify_point_is_in_convex_hull
-
-        point_is_to_left:
-            movzx rax, byte[j]
-            add rax, 1
-            mov [min_angle_index], rax
-
-            movzx rsi, byte[i]
-            mov [tabindex+rsi*BYTE], rax
-            jmp verify_point_is_in_convex_hull
-
-
-        mov rax, [min_angle_index]
-        mov [last_min_angle_index], rax
+        mov rdx, [result_vectoriel_ybc_xab]
+        cmp rax, rdx
+        ja point_is_to_left
 
         jmp verify_point_is_in_convex_hull
+
+
+point_is_to_left:
+    mov rax, [j]
+    mov [min_angle_index], rax
+
+
+    movzx rsi, byte[i]
+    mov [tabindex+rsi*BYTE], rax
+    jmp verify_point_is_in_convex_hull
 
 
 
@@ -308,7 +299,7 @@ verify_point_is_in_convex_hull:
 
 
     inc byte[j]
-    cmp byte[j], NB_POINTS ;// todo : -1
+    cmp byte[j], NB_POINTS
     jb jarivs_boucle_2
 
     mov byte[j], 0 ; reset j
@@ -324,7 +315,7 @@ modify_point_is_in_convex_hull:
     mov byte[is_to_left], 1
 
     inc byte[j]
-    cmp byte[j], NB_POINTS ;// todo : -1
+    cmp byte[j], NB_POINTS
     jb jarivs_boucle_2
 
     mov byte[j], 0 ; reset j
