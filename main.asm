@@ -300,6 +300,8 @@ dessin:
     cmp byte[i], 10
     jb dessin
 
+    jmp jarivs_boucle_1
+
     jmp flush
 
 flush:
@@ -324,7 +326,6 @@ closeDisplay:
 jarivs_boucle_1:
 
     jmp jarivs_boucle_2
-    mov byte[j], 0 ; reset
 
     jarivs_boucle_2:
 
