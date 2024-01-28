@@ -332,12 +332,12 @@ jarivs_boucle_2:
     call XDrawLine
     ;;;
 
-    jmp verify_point_is_in_convex_hull
+    jmp verify_point_is_in_convex
 
 
 
 
-verify_point_is_in_convex_hull:
+verify_point_is_in_convex:
     ; TODO : vérifier si le point est dans l'enveloppe convexe
 
     inc byte[j]

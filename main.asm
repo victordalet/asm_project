@@ -197,10 +197,30 @@ display_array_2:
 
     mov byte[i], 0 ; reset i
 
-    jmp jarivs_boucle_1
+    jmp jarvis
 
+
+
+;;;
+; en assembleur pour linux on a deux table tab1 contenant les coordonnées en x des points et tab2 contenant les coordonnées en y des points on cherche a remplir le tableau tabindex contenant les index des points de l'enveloppe convexe suivant la méthode de jarvis
+; le point le plus à gauche est le point d'index 0 dans tab1 et tab2
+; le nombre d'element dans tab1 et tab2 est dans la variable NB_POINTS
+; a la fin du programme jump a label display_array_3 pour afficher le tableau tabindex
+;voici le code dans la section .bss dont tu aura besoin
+;section .bss
+   ; tab1:   resb   NB_POINTS
+  ;  tab2:   resb    NB_POINTS
+ ;   tabindex:   resb    NB_POINTS
+    ; last_point_random_x : resd 1
+     ;last_point_random_y : resd 1
+
+; pour trouver le point le plus a gauche utilise le produit vectoriel suivant : (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1) si le resultat est positif alors le point 3 est a gauche de la droite passant par les points 1 et 2
+; egalement verifier sur le point ayant comme coordonnées last_point_random_x et last_point_random_y est a l'interieur de l'enveloppe convexe ou non pour cela passer la variable is_to_left a 1 si le point est a l'interieur de l'enveloppe convexe et a 0 sinon
+; code le programme
+;;;
 
 display_array_3:
+
     mov rdi, display
     movzx rsi, byte[i]
     movzx rdx, byte[tabindex+rsi*BYTE]
@@ -217,7 +237,7 @@ display_array_3:
 
 
 ;##################################################
-;########### JARVIS      ##################
+;########### JARVIS              ##################
 ;##################################################
 
 jarivs_boucle_1:
@@ -230,7 +250,7 @@ jarivs_boucle_1:
         movzx rsi, byte[i]
         movzx rax, byte[j]
         cmp rax, rsi
-        jne verify_point_is_in_convex_hull
+        jne verify_point_is_in_convex
 
         ;;; xab
         movzx rsi, byte[last_min_angle_index]
@@ -258,6 +278,7 @@ jarivs_boucle_1:
         add rsi, 1
         sub rax, [tab2+rsi*BYTE]
         mov [ybc], rax
+
         ;;; produit vectoriel xbc yab
         movzx rsi, byte[xbc]
         movzx rdx, byte[yab]
@@ -276,22 +297,19 @@ jarivs_boucle_1:
         cmp rax, rdx
         ja point_is_to_left
 
-        jmp verify_point_is_in_convex_hull
+        jmp verify_point_is_in_convex
 
 
 point_is_to_left:
     mov rax, [j]
     mov [min_angle_index], rax
 
-
     movzx rsi, byte[i]
     mov [tabindex+rsi*BYTE], rax
-    jmp verify_point_is_in_convex_hull
+    jmp verify_point_is_in_convex
 
 
-
-
-verify_point_is_in_convex_hull:
+verify_point_is_in_convex:
     mov rax, [final_result_vectoriel]
     cmp rax, 0
     jb modify_point_is_in_convex_hull
@@ -365,7 +383,6 @@ draw:
     push 0xFFFFFF	; background  0xRRGGBB
     push 0x00FF00
     push 1
-    call XCreateSimpleWindow
     mov qword[window],rax
 
     mov rdi,qword[display_name]
@@ -400,9 +417,7 @@ cmp dword[event],KeyPress			; Si on appuie sur une touche
 je closeDisplay						; on saute au label 'closeDisplay' qui ferme la fenêtre
 jmp boucle
 
-;#########################################
-;#		DRAW                    		 #
-;#########################################
+
 dessin:
 
     mov rdi,qword[display_name]
@@ -427,10 +442,9 @@ dessin:
     push r9
     call XFillArc
 
-    ;;; LIGNES
     mov rdi,qword[display_name]
     mov rsi,qword[gc]
-    mov edx,0xFFAA00	; Couleur du crayon ; orange
+    mov edx,0x000000	; Couleur du crayon ; orange
     call XSetForeground
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
