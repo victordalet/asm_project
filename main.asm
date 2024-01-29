@@ -55,6 +55,7 @@ section .bss
     ybc:                    resd 1
 
 
+
 section .data
 
     event:		times	24 dq 0
@@ -66,6 +67,7 @@ section .data
 
     i:    db    0
     j:      db 0
+    k:      db 0
     fmt_print:  db  "Dernier Point aléatoire: %d",10,0
     is_to_left: db 1
     last_sense_is: db "Le point (%d,%d) est cp,te,i dans l'enveloppe",10,0
@@ -82,6 +84,7 @@ section .data
     final_result_vectoriel:	db	0
     p:    db	0
     q:    db	0
+    l:   db	0
 
 section .text
 main:
@@ -196,8 +199,9 @@ display_array_2:
     mov rax,0
     call printf
 
-    mov byte[i], 0 ; reset i
     mov byte[j], 0 ; reset j
+    mov byte[p], 0 ; reset p
+    mov byte[q], 0 ; reset q
 
     jmp jarivs_boucle_1
 
@@ -209,55 +213,77 @@ display_array_2:
 jarivs_boucle_1:
 
     mov rax, [p]
-    movzx rsi, byte[i]
-    mov [tabindex+rsi*BYTE], rax
-    ; TODO : verifier l'algorithme de jarvis
+    movzx rsi, byte[j]
+    mov [tabindex+rsi*BYTE],rax
 
-    inc byte[q]
+    ; q = (p+1) mod n
+    mov edx, 0
+    mov rax, [p]
+    add rax, 1
+    mov [q], edx
+    mov edx, [q]
+    mov ecx, NB_POINTS
+    div ecx
+    mov [q], edx
 
+
+    mov byte[k], 0 ; reset k
     jmp jarivs_boucle_2
 
     jarivs_boucle_2:
 
 
-        ;;; xab
-        movzx rsi, byte[p]
-        movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[i]
-        sub rax, [tab1+rsi*BYTE]
-        mov [xab], rax
         ;;; yab
-        movzx rsi, byte[p]
+        movzx rsi, byte[k]
         movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[i]
+        movzx rsi, byte[p]
         sub rax, [tab2+rsi*BYTE]
         mov [yab], rax
-        ;;; xbc
-        movzx rsi, byte[i]
-        movzx rax, byte[tab1+rsi*BYTE]
+        ;;; xab
         movzx rsi, byte[q]
-        add rsi, 1
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[k]
+        sub rax, [tab1+rsi*BYTE]
+        mov [xab], rax
+        ;;; xbc
+        movzx rsi, byte[k]
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[p]
         sub rax, [tab1+rsi*BYTE]
         mov [xbc], rax
         ;;; ybc
-        movzx rsi, byte[p]
-        movzx rax, byte[tab2+rsi*BYTE]
         movzx rsi, byte[q]
-        add rsi, 1
+        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rsi, byte[k]
         sub rax, [tab2+rsi*BYTE]
         mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
-        movzx rsi, byte[xbc]
-        movzx rdx, byte[yab]
-        mul rdx
-        mov [result_vectoriel_xbc_yab], rsi
+        movzx rax, byte[yab]
+        movzx rcx, byte[xab]
+        mul rcx
+        mov [result_vectoriel_xbc_yab], rax
 
         ;;; produit vectoriel xab ybc
-        movzx rsi, byte[xab]
-        movzx rdx, byte[ybc]
-        mul rdx
-        mov [result_vectoriel_ybc_xab], rsi
+        movzx rax, byte[xbc]
+        movzx rcx, byte[ybc]
+        mul rcx
+        mov [result_vectoriel_ybc_xab], rax
+
+        mov rdi,fmt_print
+        movzx rsi,byte[yab]
+        mov rax,0
+        call printf
+
+        mov rdi,fmt_print
+        movzx rsi,byte[xab]
+        mov rax,0
+        call printf
+
+        mov rdi,fmt_print
+        movzx rsi,byte[result_vectoriel_xbc_yab]
+        mov rax,0
+        call printf
 
 
         mov rax, [result_vectoriel_xbc_yab]
@@ -265,45 +291,41 @@ jarivs_boucle_1:
         cmp rax, rdx
         jb point_is_to_left
 
-        mov rax, [q]
-        mov [p], rax
+        jmp incremente_calcule_jarvis
 
-
-        inc byte[i]
-        cmp byte[i], NB_POINTS
-        jb jarivs_boucle_1
-
-        mov byte[i], 0 ; reset i
-
-        cmp byte[p], 0
-        jmp display_array_3
-
-        jmp jarivs_boucle_1
 
 
 point_is_to_left:
-    mov rax, [i]
+    mov rax, [k]
     mov [q], rax
+
+    jmp incremente_calcule_jarvis
+
+incremente_calcule_jarvis:
+    inc byte[k]
+    mov rax, [k]
+    cmp rax, NB_POINTS
+    jb jarivs_boucle_2
 
     mov rax, [q]
     mov [p], rax
 
-
     inc byte[j]
 
-    cmp byte[j], NB_POINTS
-    jb jarivs_boucle_2
+    cmp byte[p], 0
+    je stop_jarvis
 
-    mov byte[j], 0 ; reset j
-    inc byte[i]
-    cmp byte[i], NB_POINTS
-    jb jarivs_boucle_1
+    jmp jarivs_boucle_1
 
+
+stop_jarvis:
     mov byte[i], 0 ; reset i
+    mov byte[j], 0 ; reset j
+    mov byte[k], 0 ; reset k
+    mov byte[p], 0 ; reset p
+    mov byte[q], 0 ; reset q
+
     jmp display_array_3
-
-
-
 
 display_array_3:
 
@@ -318,66 +340,59 @@ display_array_3:
     jb display_array_3
 
     mov byte[i], 0 ; reset i
-    jmp draw
 
 
 
 ;##################################################
 ;########### DISPLAY            ##################
 ;##################################################
-draw:
-    mov rax,0
-    mov rbx,0
-    mov rcx,0
-    mov rdx,0
-    mov rsi,0
-    mov rdi,0
 
-    xor     rdi,rdi
-    call    XOpenDisplay	; Création de display
-    mov     qword[display_name],rax	; rax=nom du display
+xor     rdi,rdi
+call    XOpenDisplay	; Création de display
+mov     qword[display_name],rax	; rax=nom du display
 
-    ; display_name structure
-    ; screen = DefaultScreen(display_name);
-    mov     rax,qword[display_name]
-    mov     eax,dword[rax+0xe0]
-    mov     dword[screen],eax
+; display_name structure
+; screen = DefaultScreen(display_name);
+mov     rax,qword[display_name]
+mov     eax,dword[rax+0xe0]
+mov     dword[screen],eax
 
-    mov rdi,qword[display_name]
-    mov esi,dword[screen]
-    call XRootWindow
-    mov rbx,rax
+mov rdi,qword[display_name]
+mov esi,dword[screen]
+call XRootWindow
+mov rbx,rax
 
-    mov rdi,qword[display_name]
-    mov rsi,rbx
-    mov rdx,10
-    mov rcx,10
-    mov r8,400	; largeur
-    mov r9,400	; hauteur
-    push 0xFFFFFF	; background  0xRRGGBB
-    push 0x00FF00
-    push 1
-    mov qword[window],rax
+mov rdi,qword[display_name]
+mov rsi,rbx
+mov rdx,10
+mov rcx,10
+mov r8,400	; largeur
+mov r9,400	; hauteur
+push 0xFFFFFF	; background  0xRRGGBB
+push 0x00FF00
+push 1
+mov qword[window],rax
 
-    mov rdi,qword[display_name]
-    mov rsi,qword[window]
-    mov rdx,131077 ;131072
-    call XSelectInput
+mov rdi,qword[display_name]
+mov rsi,qword[window]
+mov rdx,131077 ;131072
+call XSelectInput
 
-    mov rdi,qword[display_name]
-    mov rsi,qword[window]
-    call XMapWindow
+mov rdi,qword[display_name]
+mov rsi,qword[window]
+call XMapWindow
 
-    mov rsi,qword[window]
-    mov rdx,0
-    mov rcx,0
-    call XCreateGC
-    mov qword[gc],rax
+mov rsi,qword[window]
+mov rdx,0
+mov rcx,0
+call XCreateGC
+mov qword[gc],rax
 
-    mov rdi,qword[display_name]
-    mov rsi,qword[gc]
-    mov rdx,0x000000	; Couleur du crayon
-    call XSetForeground
+mov rdi,qword[display_name]
+mov rsi,qword[gc]
+mov rdx,0x000000	; Couleur du crayon
+call XSetForeground
+
 
 boucle: ; boucle de gestion des évènements
 mov rdi,qword[display_name]
