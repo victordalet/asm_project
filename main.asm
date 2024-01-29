@@ -29,7 +29,7 @@ extern exit
 %define DWORD	4
 %define WORD	2
 %define BYTE	1
-%define NB_POINTS 50
+%define NB_POINTS 30
 
 global main
 
@@ -340,6 +340,11 @@ display_array_3:
     jb display_array_3
 
     mov byte[i], 0 ; reset i
+    ;reset register
+    mov rax, 0
+    mov rdx, 0
+    mov rcx, 0
+    mov rsi, 0
 
 
 
@@ -392,6 +397,7 @@ mov rdi,qword[display_name]
 mov rsi,qword[gc]
 mov rdx,0x000000	; Couleur du crayon
 call XSetForeground
+
 
 
 boucle: ; boucle de gestion des évènements
@@ -489,7 +495,7 @@ closeDisplay:
 
 display_last_point_random:
     cmp byte[is_to_left], 1
-    jne display_last_point_random_is_not
+    je display_last_point_random_is_not
 
 
     mov rdi,qword[display_name]
