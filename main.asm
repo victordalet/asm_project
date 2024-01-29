@@ -49,6 +49,10 @@ section .bss
     val:    resb    1
     last_point_random_x : resd 1
     last_point_random_y : resd 1
+    xab:                    resd 1
+    yab:                    resd 1
+    xbc:                    resd 1
+    ybc:                    resd 1
 
 
 section .data
@@ -73,13 +77,11 @@ section .data
     last_min_angle_index: db 0
     max:	db	10
     swapped:	db	0
-    xab:	db	0
-    yab:	db	0
-    xbc:	db	0
-    ybc:	db	0
     result_vectoriel_xbc_yab:	db	0
     result_vectoriel_ybc_xab:	db	0
     final_result_vectoriel:	db	0
+    p:    db	0
+    q:    db	0
 
 section .text
 main:
@@ -194,46 +196,10 @@ display_array_2:
     mov rax,0
     call printf
 
-
     mov byte[i], 0 ; reset i
+    mov byte[j], 0 ; reset j
 
-    jmp jarvis
-
-
-
-;;;
-; en assembleur pour linux on a deux table tab1 contenant les coordonnées en x des points et tab2 contenant les coordonnées en y des points on cherche a remplir le tableau tabindex contenant les index des points de l'enveloppe convexe suivant la méthode de jarvis
-; le point le plus à gauche est le point d'index 0 dans tab1 et tab2
-; le nombre d'element dans tab1 et tab2 est dans la variable NB_POINTS
-; a la fin du programme jump a label display_array_3 pour afficher le tableau tabindex
-;voici le code dans la section .bss dont tu aura besoin
-;section .bss
-   ; tab1:   resb   NB_POINTS
-  ;  tab2:   resb    NB_POINTS
- ;   tabindex:   resb    NB_POINTS
-    ; last_point_random_x : resd 1
-     ;last_point_random_y : resd 1
-
-; pour trouver le point le plus a gauche utilise le produit vectoriel suivant : (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1) si le resultat est positif alors le point 3 est a gauche de la droite passant par les points 1 et 2
-; egalement verifier sur le point ayant comme coordonnées last_point_random_x et last_point_random_y est a l'interieur de l'enveloppe convexe ou non pour cela passer la variable is_to_left a 1 si le point est a l'interieur de l'enveloppe convexe et a 0 sinon
-; code le programme
-;;;
-
-display_array_3:
-
-    mov rdi, display
-    movzx rsi, byte[i]
-    movzx rdx, byte[tabindex+rsi*BYTE]
-    mov rax, 0
-    call printf
-
-    inc byte[i]
-    cmp byte[i], NB_POINTS
-    jb display_array_3
-
-    mov byte[i], 0 ; reset i
-    jmp draw
-
+    jmp jarivs_boucle_1
 
 
 ;##################################################
@@ -242,39 +208,41 @@ display_array_3:
 
 jarivs_boucle_1:
 
+    mov rax, [p]
+    movzx rsi, byte[i]
+    mov [tabindex+rsi*BYTE], rax
+    ; TODO : verifier l'algorithme de jarvis
+
+    inc byte[q]
+
     jmp jarivs_boucle_2
 
     jarivs_boucle_2:
 
-        ; ne pas prendre en compte le point lui même
-        movzx rsi, byte[i]
-        movzx rax, byte[j]
-        cmp rax, rsi
-        jne verify_point_is_in_convex
 
         ;;; xab
-        movzx rsi, byte[last_min_angle_index]
+        movzx rsi, byte[p]
         movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[j]
+        movzx rsi, byte[i]
         sub rax, [tab1+rsi*BYTE]
         mov [xab], rax
         ;;; yab
-        movzx rsi, byte[last_min_angle_index]
+        movzx rsi, byte[p]
         movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[j]
+        movzx rsi, byte[i]
         sub rax, [tab2+rsi*BYTE]
         mov [yab], rax
         ;;; xbc
-        movzx rsi, byte[last_min_angle_index]
+        movzx rsi, byte[i]
         movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[j]
+        movzx rsi, byte[q]
         add rsi, 1
         sub rax, [tab1+rsi*BYTE]
         mov [xbc], rax
         ;;; ybc
-        movzx rsi, byte[last_min_angle_index]
+        movzx rsi, byte[p]
         movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[j]
+        movzx rsi, byte[q]
         add rsi, 1
         sub rax, [tab2+rsi*BYTE]
         mov [ybc], rax
@@ -295,57 +263,63 @@ jarivs_boucle_1:
         mov rax, [result_vectoriel_xbc_yab]
         mov rdx, [result_vectoriel_ybc_xab]
         cmp rax, rdx
-        ja point_is_to_left
+        jb point_is_to_left
 
-        jmp verify_point_is_in_convex
+        mov rax, [q]
+        mov [p], rax
+
+
+        inc byte[i]
+        cmp byte[i], NB_POINTS
+        jb jarivs_boucle_1
+
+        mov byte[i], 0 ; reset i
+
+        cmp byte[p], 0
+        jmp display_array_3
+
+        jmp jarivs_boucle_1
 
 
 point_is_to_left:
-    mov rax, [j]
-    mov [min_angle_index], rax
+    mov rax, [i]
+    mov [q], rax
 
+    mov rax, [q]
+    mov [p], rax
+
+
+    inc byte[j]
+
+    cmp byte[j], NB_POINTS
+    jb jarivs_boucle_2
+
+    mov byte[j], 0 ; reset j
+    inc byte[i]
+    cmp byte[i], NB_POINTS
+    jb jarivs_boucle_1
+
+    mov byte[i], 0 ; reset i
+    jmp display_array_3
+
+
+
+
+display_array_3:
+
+    mov rdi, display
     movzx rsi, byte[i]
-    mov [tabindex+rsi*BYTE], rax
-    jmp verify_point_is_in_convex
+    movzx rdx, byte[tabindex+rsi*BYTE]
+    mov rax, 0
+    call printf
 
-
-verify_point_is_in_convex:
-    mov rax, [final_result_vectoriel]
-    cmp rax, 0
-    jb modify_point_is_in_convex_hull
-
-
-    mov rax, [j]
-    add rax, 2
-    mov [j], rax
-    cmp byte[j], NB_POINTS
-    jb jarivs_boucle_2
-
-    mov byte[j], 0 ; reset j
     inc byte[i]
     cmp byte[i], NB_POINTS
-    jb jarivs_boucle_1
+    jb display_array_3
 
     mov byte[i], 0 ; reset i
-    jmp display_array_3
+    jmp draw
 
-
-modify_point_is_in_convex_hull:
-    mov byte[is_to_left], 1
-
-    mov rax, [j]
-    add rax, 2
-    mov [j], rax
-    cmp byte[j], NB_POINTS
-    jb jarivs_boucle_2
-
-    mov byte[j], 0 ; reset j
-    inc byte[i]
-    cmp byte[i], NB_POINTS
-    jb jarivs_boucle_1
-
-    mov byte[i], 0 ; reset i
-    jmp display_array_3
 
 
 ;##################################################
@@ -431,7 +405,7 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx, [tab1+rax*BYTE]		; coordonnée en x du point
+    mov rcx, [tab1+rax*BYTE]		; coordonnée en x du point : TODO : le point ne s'affiche pas correctement
     sub ecx,3
     mov r8, [tab2+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
@@ -448,7 +422,7 @@ dessin:
     call XSetForeground
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
-    movzx rax, byte[tabindex+rbx*BYTE]
+    movzx rax, byte[tabindex+rbx*BYTE]  ; TODO : verifier que la ligne se dessine bien
     mov rcx, [tab1+rax*BYTE]
     mov [x1], rcx
     mov rcx, [tab2+rax*BYTE]
