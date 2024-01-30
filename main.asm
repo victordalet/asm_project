@@ -82,15 +82,15 @@ section .data
     result_vectoriel_xbc_yab:	db	0
     result_vectoriel_ybc_xab:	db	0
     final_result_vectoriel:	db	0
-    p:    db	0
-    q:    db	0
-    l:   db	0
+    p_index:    db	0
+    q_index:    db	0
+    l_index:   db	0
 
 section .text
 main:
     push rbp
     jmp init_array_1
-	
+
 ;##################################################
 ;########### RANDOM POSTION      ##################
 ;##################################################
@@ -199,136 +199,12 @@ display_array_2:
     mov rax,0
     call printf
 
-    mov byte[j], 0 ; reset j
-    mov byte[p], 0 ; reset p
-    mov byte[q], 0 ; reset q
 
     jmp jarivs_boucle_1
 
 
-;##################################################
-;########### JARVIS              ##################
-;##################################################
-
-jarivs_boucle_1:
-
-    mov rax, [p]
-    movzx rsi, byte[j]
-    mov [tabindex+rsi*BYTE],rax
-
-    ; q = (p+1) mod n
-    mov edx, 0
-    mov rax, [p]
-    add rax, 1
-    mov [q], edx
-    mov edx, [q]
-    mov ecx, NB_POINTS
-    div ecx
-    mov [q], edx
-
-
-    mov byte[k], 0 ; reset k
-    jmp jarivs_boucle_2
-
-    jarivs_boucle_2:
-
-
-        ;;; yab
-        movzx rsi, byte[k]
-        movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[p]
-        sub rax, [tab2+rsi*BYTE]
-        mov [yab], rax
-        ;;; xab
-        movzx rsi, byte[q]
-        movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[k]
-        sub rax, [tab1+rsi*BYTE]
-        mov [xab], rax
-        ;;; xbc
-        movzx rsi, byte[k]
-        movzx rax, byte[tab1+rsi*BYTE]
-        movzx rsi, byte[p]
-        sub rax, [tab1+rsi*BYTE]
-        mov [xbc], rax
-        ;;; ybc
-        movzx rsi, byte[q]
-        movzx rax, byte[tab2+rsi*BYTE]
-        movzx rsi, byte[k]
-        sub rax, [tab2+rsi*BYTE]
-        mov [ybc], rax
-
-        ;;; produit vectoriel xbc yab
-        movzx rax, byte[yab]
-        movzx rcx, byte[xab]
-        mul rcx
-        mov [result_vectoriel_xbc_yab], rax
-
-        ;;; produit vectoriel xab ybc
-        movzx rax, byte[xbc]
-        movzx rcx, byte[ybc]
-        mul rcx
-        mov [result_vectoriel_ybc_xab], rax
-
-        mov rdi,fmt_print
-        movzx rsi,byte[yab]
-        mov rax,0
-        call printf
-
-        mov rdi,fmt_print
-        movzx rsi,byte[xab]
-        mov rax,0
-        call printf
-
-        mov rdi,fmt_print
-        movzx rsi,byte[result_vectoriel_xbc_yab]
-        mov rax,0
-        call printf
-
-
-        mov rax, [result_vectoriel_xbc_yab]
-        mov rdx, [result_vectoriel_ybc_xab]
-        cmp rax, rdx
-        jb point_is_to_left
-
-        jmp incremente_calcule_jarvis
-
-
-
-point_is_to_left:
-    mov rax, [k]
-    mov [q], rax
-
-    jmp incremente_calcule_jarvis
-
-incremente_calcule_jarvis:
-    inc byte[k]
-    mov rax, [k]
-    cmp rax, NB_POINTS
-    jb jarivs_boucle_2
-
-    mov rax, [q]
-    mov [p], rax
-
-    inc byte[j]
-
-    cmp byte[p], 0
-    je stop_jarvis
-
-    jmp jarivs_boucle_1
-
-
-stop_jarvis:
-    mov byte[i], 0 ; reset i
-    mov byte[j], 0 ; reset j
-    mov byte[k], 0 ; reset k
-    mov byte[p], 0 ; reset p
-    mov byte[q], 0 ; reset q
-
-    jmp display_array_3
 
 display_array_3:
-
     mov rdi, display
     movzx rsi, byte[i]
     movzx rdx, byte[tabindex+rsi*BYTE]
@@ -340,17 +216,135 @@ display_array_3:
     jb display_array_3
 
     mov byte[i], 0 ; reset i
-    ;reset register
-    mov rax, 0
-    mov rdx, 0
-    mov rcx, 0
-    mov rsi, 0
+
+    jmp draw
+
+
+;##################################################
+;########### JARVIS              ##################
+;##################################################
+
+jarivs_boucle_1:
+
+    movzx rax, byte[p_index]
+    movzx rsi, byte[j]
+    mov [tabindex+rsi*BYTE],rax
+
+    ; q = (p+1) mod n
+    mov edx, 0
+    movzx rax, byte[p_index]
+    add rax, 1
+    mov [q_index], edx
+    movzx edx, byte[q_index]
+    mov ecx, NB_POINTS
+    div ecx
+    mov [q_index], edx
+
+
+    mov byte[k], 0 ; reset k
+    jmp jarivs_boucle_2
+
+    jarivs_boucle_2:
+
+
+        ;;; yab
+        movzx rsi, byte[k]
+        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rsi, byte[p_index]
+        sub rax, [tab2+rsi*BYTE]
+        mov [yab], rax
+        ;;; xab
+        movzx rsi, byte[q_index]
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[k]
+        sub rax, [tab1+rsi*BYTE]
+        mov [xab], rax
+        ;;; xbc
+        movzx rsi, byte[k]
+        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rsi, byte[p_index]
+        sub rax, [tab1+rsi*BYTE]
+        mov [xbc], rax
+        ;;; ybc
+        movzx rsi, byte[q_index]
+        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rsi, byte[k]
+        sub rax, [tab2+rsi*BYTE]
+        mov [ybc], rax
+
+        ;;; produit vectoriel xbc yab
+        movzx rax, byte[yab]
+        movzx rcx, byte[xab]
+        mul rcx
+        mov [result_vectoriel_xbc_yab], rax
+
+        ;;; produit vectoriel xab ybc // TODO : le resultat de la multiplication est faux
+        movzx rax, byte[xbc]
+        movzx rcx, byte[ybc]
+        mul rcx
+        mov [result_vectoriel_ybc_xab], rax
+
+        movzx rax, byte[result_vectoriel_xbc_yab]
+        movzx rdx, byte[result_vectoriel_ybc_xab]
+        cmp rax, rdx
+        jb point_is_to_left
+
+        jmp test_is_in_jarvis_point
+
+
+
+point_is_to_left:
+    movzx rax, byte[k]
+    mov [q_index], rax
+
+    jmp test_is_in_jarvis_point
+
+incremente_calcule_jarvis:
+    inc byte[k]
+    movzx rax, byte[k]
+    cmp rax, NB_POINTS
+    jb jarivs_boucle_2
+
+    movzx rax, byte[q_index]
+    mov [p_index], rax
+
+    inc byte[j]
+
+    cmp byte[p_index], 0
+    je stop_jarvis
+
+    cmp byte[j], NB_POINTS
+    je stop_jarvis
+
+    jmp jarivs_boucle_1
+
+
+stop_jarvis:
+    mov byte[i], 0 ; reset i
+
+    jmp display_array_3
+
+
+test_is_in_jarvis_point:
+        movzx rax, byte[result_vectoriel_xbc_yab]
+        movzx rdx, byte[result_vectoriel_ybc_xab]
+        cmp rax, rdx
+        ja is_not_in_jarvis_point
+
+        jmp incremente_calcule_jarvis
+
+
+is_not_in_jarvis_point:
+    mov byte[is_to_left], 0
+
+    jmp incremente_calcule_jarvis
 
 
 
 ;##################################################
 ;########### DISPLAY            ##################
 ;##################################################
+draw:
 
 xor     rdi,rdi
 call    XOpenDisplay	; Création de display
@@ -376,6 +370,7 @@ mov r9,400	; hauteur
 push 0xFFFFFF	; background  0xRRGGBB
 push 0x00FF00
 push 1
+call XCreateSimpleWindow
 mov qword[window],rax
 
 mov rdi,qword[display_name]
@@ -397,8 +392,6 @@ mov rdi,qword[display_name]
 mov rsi,qword[gc]
 mov rdx,0x000000	; Couleur du crayon
 call XSetForeground
-
-
 
 boucle: ; boucle de gestion des évènements
 mov rdi,qword[display_name]
@@ -426,9 +419,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx, [tab1+rax*BYTE]		; coordonnée en x du point : TODO : le point ne s'affiche pas correctement
+    movzx rcx, byte[tab1+rax*BYTE]		; coordonnée en x du point
     sub ecx,3
-    mov r8, [tab2+rax*BYTE] 		; coordonnée en y du point
+    movzx r8, byte[tab2+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -443,10 +436,10 @@ dessin:
     call XSetForeground
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
-    movzx rax, byte[tabindex+rbx*BYTE]  ; TODO : verifier que la ligne se dessine bien
-    mov rcx, [tab1+rax*BYTE]
+    movzx rax, byte[tabindex+rbx*BYTE]  ;
+    movzx rcx, byte[tab1+rax*BYTE]
     mov [x1], rcx
-    mov rcx, [tab2+rax*BYTE]
+    movzx rcx, byte[tab2+rax*BYTE]
     mov [y1], rcx
     movzx rbx, byte[i]
     add rbx, 1
@@ -474,11 +467,11 @@ dessin:
 
 
 flush:
-mov rdi,qword[display_name]
-call XFlush
-jmp boucle
-mov rax,34
-syscall
+    mov rdi,qword[display_name]
+    call XFlush
+    jmp boucle
+    mov rax,34
+    syscall
 
 closeDisplay:
     mov     rax,qword[display_name]
