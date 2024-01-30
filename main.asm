@@ -19,36 +19,36 @@ extern exit
 %define	StructureNotifyMask	131072
 %define KeyPressMask		1
 %define ButtonPressMask		4
-%define MapNotify		19
-%define KeyPress		2
-%define ButtonPress		4
-%define Expose			12
+%define MapNotify		    19
+%define KeyPress		    2
+%define ButtonPress		    4
+%define Expose			    12
 %define ConfigureNotify		22
-%define CreateNotify 16
-%define QWORD	8
-%define DWORD	4
-%define WORD	2
-%define BYTE	1
-%define NB_POINTS 30
+%define CreateNotify        16
+%define QWORD	            8
+%define DWORD	            4
+%define WORD	            2
+%define BYTE	            1
+%define NB_POINTS           30
 
 global main
 
 section .bss
-    display_name:	resq	1
-    screen:			resd	1
-    depth:         	resd	1
-    connection:    	resd	1
-    width:         	resd	1
-    height:        	resd	1
-    window:		resq	1
-    gc:		resq	1
+    display_name:	        resq	1
+    screen:			        resd	1
+    depth:         	        resd	1
+    connection:    	        resd	1
+    width:         	        resd	1
+    height:        	        resd	1
+    window:		            resq	1
+    gc:		                resq	1
 
-    tab1:   resb   NB_POINTS
-    tab2:   resb    NB_POINTS
-    tabindex:   resb    NB_POINTS
-    val:    resb    1
-    last_point_random_x : resd 1
-    last_point_random_y : resd 1
+    array_x:                resb   NB_POINTS
+    array_y:                resb    NB_POINTS
+    tabindex:               resb    NB_POINTS
+    val:                    resb    1
+    last_point_random_x :   resd 1
+    last_point_random_y :   resd 1
     xab:                    resd 1
     yab:                    resd 1
     xbc:                    resd 1
@@ -58,33 +58,32 @@ section .bss
 
 section .data
 
-    event:		times	24 dq 0
-
-    x1:	dd	0
-    x2:	dd	0
-    y1:	dd	0
-    y2:	dd	0
-
-    i:    db    0
-    j:      db 0
-    k:      db 0
-    fmt_print:  db  "Dernier Point aléatoire: %d",10,0
-    is_to_left: db 1
-    last_sense_is: db "Le point (%d,%d) est cp,te,i dans l'enveloppe",10,0
-    last_sense_is_not: db "Le point (%d,%d) n'est pas contenu dans l'enveloppe",10,0
-    point_max_left_print: db "index max gauche est %d",10,0
-    result_vectoriel_print: db "result vectoriel est %d",10,0
-    display:  db  "t[%d]=%d",10,0
-    min_angle_index: db 0
-    last_min_angle_index: db 0
-    max:	db	10
-    swapped:	db	0
+    event:	                    times	24 dq 0
+    x1:	                        dd	0
+    x2:	                        dd	0
+    y1:	                        dd	0
+    y2:                     	dd	0
+    i:                          db 0
+    j:                          db 0
+    k:                          db 0
+    is_to_left:                 db 1
+    last_random_point_print:    db  "Dernier Point aléatoire: %d",10,0
+    last_sense_is:              db  "Le point (%d,%d) est cp,te,i dans l'enveloppe",10,0
+    last_sense_is_not:          db  "Le point (%d,%d) n'est pas contenu dans l'enveloppe",10,0
+    point_max_left_print:       db  "index max gauche est %d",10,0
+    result_vectoriel_print:     db  "result vectoriel est %d",10,0
+    display:                    db  "t[%d]=%d",10,0
+    min_angle_index:            db 0
+    last_min_angle_index:       db 0
+    max:	                    db	10
+    swapped:	                db	0
     result_vectoriel_xbc_yab:	db	0
     result_vectoriel_ybc_xab:	db	0
-    final_result_vectoriel:	db	0
-    p_index:    db	0
-    q_index:    db	0
-    l_index:   db	0
+    final_result_vectoriel:	    db	0
+    p_index:                    db	0
+    q_index:                    db	0
+    l_index:                    db	0
+
 
 section .text
 main:
@@ -92,25 +91,25 @@ main:
     jmp init_array_1
 
 ;##################################################
-;########### RANDOM POSTION      ##################
+; RANDOM POINT
 ;##################################################
 init_array_1:
-    ; init last radnom point
+    ; init last random point
     mov [last_point_random_x], rax
     rdrand rax
     mov [last_point_random_y], rax
-    ; init array
 
+    ; init array
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
-    mov [tab1+ecx*BYTE], rax
+    mov [array_x+ecx*BYTE], rax
 
     inc byte[i]
     cmp byte[i], NB_POINTS
     jb init_array_1
 
-    mov byte[i], 0 ; reset i
+    mov byte[i], 0
     jmp bubble
 
 
@@ -120,16 +119,16 @@ bubble:
 		mov byte[i],1	; i=compteur de boucle
 		boucle_bubble:
 			movzx ebx,byte[i]		; ebx=i
-			mov cl,byte[tab1+ebx*BYTE]	; cl=tab[i]
+			mov cl,byte[array_x+ebx*BYTE]	; cl=tab[i]
 			dec ebx				; ebx=i-1
-			mov dl,byte[tab1+ebx*BYTE] 	; dl=tab[i-1]
+			mov dl,byte[array_x+ebx*BYTE] 	; dl=tab[i-1]
 			cmp cl,dl
 		jae noswap ; si cl>=dl, pas d'échange : saut à noswap
 
 			;Echange
-			mov byte[tab1+ebx*BYTE],cl	; tab[i-1]=tab[i]
+			mov byte[array_x+ebx*BYTE],cl	; tab[i-1]=tab[i]
 			inc ebx	; ebx=i
-			mov byte[tab1+ebx*BYTE],dl	; tab[i]=tab[i-1]
+			mov byte[array_x+ebx*BYTE],dl	; tab[i]=tab[i-1]
 			mov byte[swapped],1	; il y a eu échange, donc swapped=1
 
 			noswap:
@@ -149,7 +148,7 @@ bubble:
 display_array_1:
     mov rdi, display
     movzx rsi, byte[i]
-    movzx rdx, byte[tab1+rsi*BYTE]
+    movzx rdx, byte[array_x+rsi*BYTE]
     mov rax, 0
     call printf
 
@@ -157,7 +156,7 @@ display_array_1:
     cmp byte[i], NB_POINTS
     jb display_array_1
 
-    mov byte[i], 0 ; reset i
+    mov byte[i], 0
     jmp init_array_2
 
 
@@ -165,22 +164,21 @@ init_array_2:
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
-    mov [tab2+ecx*BYTE], rax
+    mov [array_y+ecx*BYTE], rax
 
     inc byte[i]
     cmp byte[i], NB_POINTS
     jb init_array_2
 
-    mov byte[i], 0 ; reset i
+    mov byte[i], 0
     jmp display_array_2
-
 
 
 
 display_array_2:
     mov rdi, display
     movzx rsi, byte[i]
-    movzx rdx, byte[tab2+rsi*BYTE]
+    movzx rdx, byte[array_y+rsi*BYTE]
     mov rax, 0
     call printf
 
@@ -189,12 +187,12 @@ display_array_2:
     jb display_array_2
 
     ; display last random point
-    mov rdi,fmt_print
+    mov rdi,last_random_point_print
     movzx rsi,byte[last_point_random_x]
     mov rax,0
     call printf
     ; display last random point
-    mov rdi,fmt_print
+    mov rdi,last_random_point_print
     movzx rsi,byte[last_point_random_y]
     mov rax,0
     call printf
@@ -215,13 +213,13 @@ display_array_3:
     cmp byte[i], NB_POINTS
     jb display_array_3
 
-    mov byte[i], 0 ; reset i
+    mov byte[i], 0
 
     jmp draw
 
 
 ;##################################################
-;########### JARVIS              ##################
+; JARVIS
 ;##################################################
 
 jarivs_boucle_1:
@@ -249,27 +247,27 @@ jarivs_boucle_1:
 
         ;;; yab
         movzx rsi, byte[k]
-        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rax, byte[array_y+rsi*BYTE]
         movzx rsi, byte[p_index]
-        sub rax, [tab2+rsi*BYTE]
+        sub rax, [array_y+rsi*BYTE]
         mov [yab], rax
         ;;; xab
         movzx rsi, byte[q_index]
-        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rax, byte[array_x+rsi*BYTE]
         movzx rsi, byte[k]
-        sub rax, [tab1+rsi*BYTE]
+        sub rax, [array_x+rsi*BYTE]
         mov [xab], rax
         ;;; xbc
         movzx rsi, byte[k]
-        movzx rax, byte[tab1+rsi*BYTE]
+        movzx rax, byte[array_x+rsi*BYTE]
         movzx rsi, byte[p_index]
-        sub rax, [tab1+rsi*BYTE]
+        sub rax, [array_x+rsi*BYTE]
         mov [xbc], rax
         ;;; ybc
         movzx rsi, byte[q_index]
-        movzx rax, byte[tab2+rsi*BYTE]
+        movzx rax, byte[array_y+rsi*BYTE]
         movzx rsi, byte[k]
-        sub rax, [tab2+rsi*BYTE]
+        sub rax, [array_y+rsi*BYTE]
         mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
@@ -320,7 +318,7 @@ incremente_calcule_jarvis:
 
 
 stop_jarvis:
-    mov byte[i], 0 ; reset i
+    mov byte[i], 0
 
     jmp display_array_3
 
@@ -342,68 +340,68 @@ is_not_in_jarvis_point:
 
 
 ;##################################################
-;########### DISPLAY            ##################
+; DRAWING
 ;##################################################
 draw:
 
-xor     rdi,rdi
-call    XOpenDisplay	; Création de display
-mov     qword[display_name],rax	; rax=nom du display
+    xor     rdi,rdi
+    call    XOpenDisplay	; Création de display
+    mov     qword[display_name],rax	; rax=nom du display
 
-; display_name structure
-; screen = DefaultScreen(display_name);
-mov     rax,qword[display_name]
-mov     eax,dword[rax+0xe0]
-mov     dword[screen],eax
+    ; display_name structure
+    ; screen = DefaultScreen(display_name);
+    mov     rax,qword[display_name]
+    mov     eax,dword[rax+0xe0]
+    mov     dword[screen],eax
 
-mov rdi,qword[display_name]
-mov esi,dword[screen]
-call XRootWindow
-mov rbx,rax
+    mov rdi,qword[display_name]
+    mov esi,dword[screen]
+    call XRootWindow
+    mov rbx,rax
 
-mov rdi,qword[display_name]
-mov rsi,rbx
-mov rdx,10
-mov rcx,10
-mov r8,400	; largeur
-mov r9,400	; hauteur
-push 0xFFFFFF	; background  0xRRGGBB
-push 0x00FF00
-push 1
-call XCreateSimpleWindow
-mov qword[window],rax
+    mov rdi,qword[display_name]
+    mov rsi,rbx
+    mov rdx,10
+    mov rcx,10
+    mov r8,400	; largeur
+    mov r9,400	; hauteur
+    push 0xFFFFFF	; background  0xRRGGBB
+    push 0x00FF00
+    push 1
+    call XCreateSimpleWindow
+    mov qword[window],rax
 
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,131077 ;131072
-call XSelectInput
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,131077 ;131072
+    call XSelectInput
 
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-call XMapWindow
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    call XMapWindow
 
-mov rsi,qword[window]
-mov rdx,0
-mov rcx,0
-call XCreateGC
-mov qword[gc],rax
+    mov rsi,qword[window]
+    mov rdx,0
+    mov rcx,0
+    call XCreateGC
+    mov qword[gc],rax
 
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov rdx,0x000000	; Couleur du crayon
-call XSetForeground
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov rdx,0x000000	; Couleur du crayon
+    call XSetForeground
 
 boucle: ; boucle de gestion des évènements
-mov rdi,qword[display_name]
-mov rsi,event
-call XNextEvent
+    mov rdi,qword[display_name]
+    mov rsi,event
+    call XNextEvent
 
-cmp dword[event],ConfigureNotify	; à l'apparition de la fenêtre
-je dessin							; on saute au label 'dessin'
+    cmp dword[event],ConfigureNotify	; à l'apparition de la fenêtre
+    je dessin							; on saute au label 'dessin'
 
-cmp dword[event],KeyPress			; Si on appuie sur une touche
-je closeDisplay						; on saute au label 'closeDisplay' qui ferme la fenêtre
-jmp boucle
+    cmp dword[event],KeyPress			; Si on appuie sur une touche
+    je closeDisplay						; on saute au label 'closeDisplay' qui ferme la fenêtre
+    jmp boucle
 
 
 dessin:
@@ -419,9 +417,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    movzx rcx, byte[tab1+rax*BYTE]		; coordonnée en x du point
+    movzx rcx, byte[array_x+rax*BYTE]		; coordonnée en x du point
     sub ecx,3
-    movzx r8, byte[tab2+rax*BYTE] 		; coordonnée en y du point
+    movzx r8, byte[array_y+rax*BYTE] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -437,16 +435,16 @@ dessin:
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
     movzx rax, byte[tabindex+rbx*BYTE]  ;
-    movzx rcx, byte[tab1+rax*BYTE]
+    movzx rcx, byte[array_x+rax*BYTE]
     mov [x1], rcx
-    movzx rcx, byte[tab2+rax*BYTE]
+    movzx rcx, byte[array_y+rax*BYTE]
     mov [y1], rcx
     movzx rbx, byte[i]
     add rbx, 1
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov rcx, [tab1+rax*BYTE]
+    mov rcx, [array_x+rax*BYTE]
     mov [x2], rcx
-    mov rcx, [tab2+rax*BYTE]
+    mov rcx, [array_y+rax*BYTE]
     mov [y2], rcx
     ; dessin de la ligne 1
     mov rdi,qword[display_name]
@@ -483,7 +481,7 @@ closeDisplay:
 
 
 ;##################################################
-;########### LAST POINT RANDOM   ##################
+; DISPLAY LAST POINT RANDOM
 ;##################################################
 
 display_last_point_random:
@@ -500,9 +498,9 @@ display_last_point_random:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    mov rcx, [last_point_random_x]	; coordonnée en x du point
+    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    mov r8,[last_point_random_y] 		; coordonnée en y du point
+    movzx r8, byte[last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
