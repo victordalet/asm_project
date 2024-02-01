@@ -377,8 +377,8 @@ draw:
     mov rsi,rbx
     mov rdx,10
     mov rcx,10
-    mov r8,800	; largeur
-    mov r9,800	; hauteur
+    mov r8,255	; largeur
+    mov r9,255	; hauteur
     push 0xFFFFFF	; background  0xRRGGBB
     push 0x00FF00
     push 1
