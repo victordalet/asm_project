@@ -531,9 +531,9 @@ display_last_point_random:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    movzx r8, byte[last_point_random_y] 		; coordonnée en y du point
+    mov r8, [last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -556,9 +556,9 @@ display_last_point_random_is_not:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    movzx r8,byte[last_point_random_y] 		; coordonnée en y du point
+    mov r8, [last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
