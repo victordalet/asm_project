@@ -374,8 +374,8 @@ draw:
     mov rsi,rbx
     mov rdx,10
     mov rcx,10
-    mov r8,400	; largeur
-    mov r9,400	; hauteur
+    mov r8,800	; largeur
+    mov r9,800	; hauteur
     push 0xFFFFFF	; background  0xRRGGBB
     push 0x00FF00
     push 1
@@ -419,7 +419,7 @@ dessin:
 
     mov rdi,qword[display_name]
     mov rsi,qword[gc]
-    mov edx,0x000000
+    mov edx,0x0000FF
     call XSetForeground
 
 
@@ -428,9 +428,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx, [array_x+rax*QWORD]		; coordonnée en x du point
+    mov rcx, qword[array_x+rax*QWORD]		; coordonnée en x du point
     sub ecx,3
-    mov r8, [array_y+rax*QWORD] 		; coordonnée en y du point
+    mov r8, qword[array_y+rax*QWORD] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
