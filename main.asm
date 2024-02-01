@@ -47,8 +47,8 @@ section .bss
     array_y:                resq    NB_POINTS
     tabindex:               resb    NB_POINTS
     val:                    resb    1
-    last_point_random_x :   resd 1
-    last_point_random_y :   resd 1
+    last_point_random_x :   resq 1
+    last_point_random_y :   resq 1
     xab:                    resd 1
     yab:                    resd 1
     xbc:                    resd 1
@@ -95,25 +95,47 @@ main:
 ;##################################################
 init_array_1:
     ; init last random point
-    mov [last_point_random_x], rax
     rdrand rax
-    mov [last_point_random_y], rax
+    test rax, rax
+    js applic_neg_last_x
+    jmp no_neg_last_x
+    applic_neg_last_x:
+        neg rax
+    no_neg_last_x:
+        mov rax, rax
+        and rax, 0FFh
+        mov [last_point_random_x], rax
+        rdrand rax
+        test rax, rax
+        js applic_neg_last_y
+        jmp no_neg_last_y
+        applic_neg_last_y:
+            neg rax
+        no_neg_last_y:
+            mov rax, rax
+            and rax, 0FFh
+            mov [last_point_random_y], rax
 
     ; init array
     movzx rsi, byte[i]
     movzx ecx, byte[i]
-    rdrand rax
-    mov rax, rax
-    and rax, 0FFh
-    mov [array_x+ecx], rax
+    test rax, rax
+    js applic_neg_array_x
+    jmp no_neg_array_x
+    applic_neg_array_x:
+        neg rax
+    no_neg_array_x:
+        rdrand rax
+        mov rax, rax
+        and rax, 0FFh
+        mov [array_x+ecx], rax
 
-    inc byte[i]
-    cmp byte[i], NB_POINTS
-    jb init_array_1
+        inc byte[i]
+        cmp byte[i], NB_POINTS
+        jb init_array_1
 
-    mov byte[i], 0
-    jmp bubble
-
+        mov byte[i], 0
+        jmp bubble
 
 
 bubble:
@@ -150,7 +172,7 @@ bubble:
 display_array_1:
     mov rdi, display
     movzx rsi, byte[i]
-    movzx rdx, byte[array_x+rsi*BYTE]
+    mov rdx, [array_x+rsi]
     mov rax, 0
     call printf
 
@@ -166,23 +188,29 @@ init_array_2:
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
-    mov rax, rax
-    and rax, 0FFh
-    mov [array_y+ecx*BYTE], rax
+    test rax, rax
+    js no_neg_array_y
+    jmp applic_neg_array_y
+    applic_neg_array_y:
+        neg rax
+    no_neg_array_y:
+        mov rax, rax
+        and rax, 0FFh
+        mov [array_y+ecx*BYTE], rax
 
-    inc byte[i]
-    cmp byte[i], NB_POINTS
-    jb init_array_2
+        inc byte[i]
+        cmp byte[i], NB_POINTS
+        jb init_array_2
 
-    mov byte[i], 0
-    jmp display_array_2
+        mov byte[i], 0
+        jmp display_array_2
 
 
 
 display_array_2:
     mov rdi, display
     movzx rsi, byte[i]
-    movzx rdx, byte[array_y+rsi*BYTE]
+    mov rdx, [array_y+rsi]
     mov rax, 0
     call printf
 
