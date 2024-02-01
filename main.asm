@@ -207,8 +207,7 @@ display_array_2:
     mov rax,0
     call printf
 
-    mov byte[j], 0
-    mov byte[k], 0
+
     jmp jarivs_boucle_1
 
 
@@ -325,8 +324,9 @@ incremente_calcule_jarvis:
     je stop_jarvis
 
 
-    cmp byte[j], NB_POINTS
-    jb stop_jarvis
+
+    cmp byte[j], NB_POINTS ; to secure
+    je stop_jarvis ; to secure :(
 
     jmp jarivs_boucle_1
 
@@ -377,8 +377,8 @@ draw:
     mov rsi,rbx
     mov rdx,10
     mov rcx,10
-    mov r8,255	; largeur
-    mov r9,255	; hauteur
+    mov r8,800	; largeur
+    mov r9,800	; hauteur
     push 0xFFFFFF	; background  0xRRGGBB
     push 0x00FF00
     push 1
@@ -539,7 +539,7 @@ display_last_point_random_is_not:
     mov rdx,qword[gc]
     mov rcx, [last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    mov r8,[last_point_random_y] 		; coordonnée en y du point
+    mov r8, [last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
