@@ -198,16 +198,17 @@ display_array_2:
 
     ; display last random point
     mov rdi,last_random_point_print
-    movzx rsi,byte[last_point_random_x]
+    mov rsi,[last_point_random_x]
     mov rax,0
     call printf
     ; display last random point
     mov rdi,last_random_point_print
-    movzx rsi,byte[last_point_random_y]
+    mov rsi,[last_point_random_y]
     mov rax,0
     call printf
 
-
+    mov byte[j], 0
+    mov byte[k], 0
     jmp jarivs_boucle_1
 
 
@@ -234,7 +235,7 @@ display_array_3:
 
 jarivs_boucle_1:
 
-    movzx rax, byte[p_index]
+    mov rax, [p_index]
     movzx rsi, byte[j]
     mov [tabindex+rsi*QWORD],rax
 
@@ -253,7 +254,6 @@ jarivs_boucle_1:
     jmp jarivs_boucle_2
 
     jarivs_boucle_2:
-
 
         ;;; yab
         movzx rsi, byte[k]
@@ -287,11 +287,12 @@ jarivs_boucle_1:
         mov [result_vectoriel_xbc_yab], rax
 
 
-        ;;; produit vectoriel xab ybc // TODO : le resultat de la multiplication est faux
+        ;;; produit vectoriel xab ybc
         mov rax, [xbc]
         mov rcx, [ybc]
         mul rcx
         mov [result_vectoriel_ybc_xab], rax
+
 
         mov rax, [result_vectoriel_xbc_yab]
         mov rdx, [result_vectoriel_ybc_xab]
@@ -314,16 +315,18 @@ incremente_calcule_jarvis:
     cmp rax, NB_POINTS
     jb jarivs_boucle_2
 
-    movzx rax, byte[q_index]
+    mov rax, [q_index]
     mov [p_index], rax
 
     inc byte[j]
 
-    cmp byte[p_index], 0
+    mov rax, [p_index]
+    cmp rax, 0
     je stop_jarvis
 
+
     cmp byte[j], NB_POINTS
-    je stop_jarvis
+    jb stop_jarvis
 
     jmp jarivs_boucle_1
 
@@ -428,9 +431,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx, qword[array_x+rax*QWORD]		; coordonnée en x du point
+    mov rcx, [array_x+rax*QWORD]		; coordonnée en x du point
     sub ecx,3
-    mov r8, qword[array_y+rax*QWORD] 		; coordonnée en y du point
+    mov r8, [array_y+rax*QWORD] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
