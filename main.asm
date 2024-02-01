@@ -96,47 +96,31 @@ main:
 init_array_1:
     ; init last random point
     rdrand rax
-    test rax, rax
-    js applic_neg_last_x
-    jmp no_neg_last_x
-    applic_neg_last_x:
-        neg rax
-    no_neg_last_x:
-        mov rax, rax
-        and rax, 0FFh
-        mov [last_point_random_x], rax
-        rdrand rax
-        test rax, rax
-        js applic_neg_last_y
-        jmp no_neg_last_y
-        applic_neg_last_y:
-            neg rax
-        no_neg_last_y:
-            mov rax, rax
-            and rax, 0FFh
-            mov [last_point_random_y], rax
+    mov rax, rax
+    and rax, 0FFh
+    mov [last_point_random_x], rax
+    rdrand rax
+    mov rax, rax
+    and rax, 0FFh
+    mov [last_point_random_y], rax
 
     ; init array
     movzx rsi, byte[i]
     movzx ecx, byte[i]
-    test rax, rax
-    js applic_neg_array_x
-    jmp no_neg_array_x
-    applic_neg_array_x:
-        neg rax
-    no_neg_array_x:
-        rdrand rax
-        mov rax, rax
-        and rax, 0FFh
-        mov [array_x+ecx], rax
+    rdrand rax
+    mov rax, rax
+    and rax, 0FFh
+    mov [array_x+ecx], rax
 
-        inc byte[i]
-        cmp byte[i], NB_POINTS
-        jb init_array_1
+    inc byte[i]
+    cmp byte[i], NB_POINTS
+    jb init_array_1
 
-        mov byte[i], 0
-        jmp bubble
+    mov byte[i], 0
+    jmp bubble
 
+
+applic_neg:
 
 bubble:
 		mov byte[swapped],0	; variable indiquant s'il y a eu échange de valeurs (si oui, swapped=1)
@@ -188,22 +172,16 @@ init_array_2:
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
-    test rax, rax
-    js no_neg_array_y
-    jmp applic_neg_array_y
-    applic_neg_array_y:
-        neg rax
-    no_neg_array_y:
-        mov rax, rax
-        and rax, 0FFh
-        mov [array_y+ecx*BYTE], rax
+    mov rax, rax
+    and rax, 0FFh
+    mov [array_y+ecx*BYTE], rax
 
-        inc byte[i]
-        cmp byte[i], NB_POINTS
-        jb init_array_2
+    inc byte[i]
+    cmp byte[i], NB_POINTS
+    jb init_array_2
 
-        mov byte[i], 0
-        jmp display_array_2
+    mov byte[i], 0
+    jmp display_array_2
 
 
 
@@ -531,9 +509,9 @@ display_last_point_random:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    mov rcx, [last_point_random_x]	; coordonnée en x du point
+    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    mov r8, [last_point_random_y] 		; coordonnée en y du point
+    movzx r8, byte[last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -556,9 +534,9 @@ display_last_point_random_is_not:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    mov rcx, [last_point_random_x]	; coordonnée en x du point
+    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    mov r8, [last_point_random_y] 		; coordonnée en y du point
+    movzx r8,byte[last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
