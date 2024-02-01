@@ -49,10 +49,10 @@ section .bss
     val:                    resb    1
     last_point_random_x :   resq 1
     last_point_random_y :   resq 1
-    xab:                    resd 1
-    yab:                    resd 1
-    xbc:                    resd 1
-    ybc:                    resd 1
+    xab:                    resq 1
+    yab:                    resq 1
+    xbc:                    resq 1
+    ybc:                    resq 1
 
 
 
@@ -110,7 +110,7 @@ init_array_1:
     rdrand rax
     mov rax, rax
     and rax, 0FFh
-    mov [array_x+ecx], rax
+    mov [array_x+ecx*QWORD], rax
 
     inc byte[i]
     cmp byte[i], NB_POINTS
@@ -127,16 +127,16 @@ bubble:
 		mov byte[i],1	; i=compteur de boucle
 		boucle_bubble:
 			movzx ebx,byte[i]		; ebx=i
-			mov cl,byte[array_x+ebx*BYTE]	; cl=tab[i]
+			mov cl,byte[array_x+ebx*QWORD]	; cl=tab[i]
 			dec ebx				; ebx=i-1
-			mov dl,byte[array_x+ebx*BYTE] 	; dl=tab[i-1]
+			mov dl,byte[array_x+ebx*QWORD] 	; dl=tab[i-1]
 			cmp cl,dl
 		jae noswap ; si cl>=dl, pas d'échange : saut à noswap
 
 			;Echange
-			mov byte[array_x+ebx*BYTE],cl	; tab[i-1]=tab[i]
+			mov byte[array_x+ebx*QWORD],cl	; tab[i-1]=tab[i]
 			inc ebx	; ebx=i
-			mov byte[array_x+ebx*BYTE],dl	; tab[i]=tab[i-1]
+			mov byte[array_x+ebx*QWORD],dl	; tab[i]=tab[i-1]
 			mov byte[swapped],1	; il y a eu échange, donc swapped=1
 
 			noswap:
@@ -156,7 +156,7 @@ bubble:
 display_array_1:
     mov rdi, display
     movzx rsi, byte[i]
-    mov rdx, [array_x+rsi]
+    mov rdx, [array_x+rsi*QWORD]
     mov rax, 0
     call printf
 
@@ -174,7 +174,7 @@ init_array_2:
     rdrand rax
     mov rax, rax
     and rax, 0FFh
-    mov [array_y+ecx*BYTE], rax
+    mov [array_y+ecx*QWORD], rax
 
     inc byte[i]
     cmp byte[i], NB_POINTS
@@ -188,7 +188,7 @@ init_array_2:
 display_array_2:
     mov rdi, display
     movzx rsi, byte[i]
-    mov rdx, [array_y+rsi]
+    mov rdx, [array_y+rsi*QWORD]
     mov rax, 0
     call printf
 
@@ -215,7 +215,7 @@ display_array_2:
 display_array_3:
     mov rdi, display
     movzx rsi, byte[i]
-    movzx rdx, byte[tabindex+rsi*BYTE]
+    movzx rdx, byte[tabindex+rsi*QWORD]
     mov rax, 0
     call printf
 
@@ -236,14 +236,14 @@ jarivs_boucle_1:
 
     movzx rax, byte[p_index]
     movzx rsi, byte[j]
-    mov [tabindex+rsi*BYTE],rax
+    mov [tabindex+rsi*QWORD],rax
 
     ; q = (p+1) mod n
     mov edx, 0
-    movzx rax, byte[p_index]
+    mov rax, [p_index]
     add rax, 1
     mov [q_index], edx
-    movzx edx, byte[q_index]
+    mov edx, [q_index]
     mov ecx, NB_POINTS
     div ecx
     mov [q_index], edx
@@ -257,27 +257,27 @@ jarivs_boucle_1:
 
         ;;; yab
         movzx rsi, byte[k]
-        movzx rax, byte[array_y+rsi*BYTE]
+        mov rax, [array_y+rsi*QWORD]
         movzx rsi, byte[p_index]
-        sub rax, [array_y+rsi*BYTE]
+        sub rax, [array_y+rsi*QWORD]
         mov [yab], rax
         ;;; xab
         movzx rsi, byte[q_index]
-        movzx rax, byte[array_x+rsi*BYTE]
+        mov rax, [array_x+rsi*QWORD]
         movzx rsi, byte[k]
-        sub rax, [array_x+rsi*BYTE]
+        sub rax, [array_x+rsi*QWORD]
         mov [xab], rax
         ;;; xbc
         movzx rsi, byte[k]
-        movzx rax, byte[array_x+rsi*BYTE]
+        mov rax, [array_x+rsi*QWORD]
         movzx rsi, byte[p_index]
-        sub rax, [array_x+rsi*BYTE]
+        sub rax, [array_x+rsi*QWORD]
         mov [xbc], rax
         ;;; ybc
         movzx rsi, byte[q_index]
-        movzx rax, byte[array_y+rsi*BYTE]
+        mov rax, [array_y+rsi*QWORD]
         movzx rsi, byte[k]
-        sub rax, [array_y+rsi*BYTE]
+        sub rax, [array_y+rsi*QWORD]
         mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
@@ -335,8 +335,8 @@ stop_jarvis:
 
 
 test_is_in_jarvis_point:
-        movzx rax, byte[result_vectoriel_xbc_yab]
-        movzx rdx, byte[result_vectoriel_ybc_xab]
+        mov rax, [result_vectoriel_xbc_yab]
+        mov rdx, [result_vectoriel_ybc_xab]
         cmp rax, rdx
         ja is_not_in_jarvis_point
 
@@ -428,9 +428,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    mov rcx, [array_x+rax]		; coordonnée en x du point
+    mov rcx, [array_x+rax*QWORD]		; coordonnée en x du point
     sub ecx,3
-    mov r8, [array_y+rax] 		; coordonnée en y du point
+    mov r8, [array_y+rax*QWORD] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -446,16 +446,16 @@ dessin:
     ; coordonnées de la ligne 1 (noire)
     movzx rbx, byte[i]
     movzx rax, byte[tabindex+rbx*BYTE]  ;
-    movzx rcx, byte[array_x+rax*BYTE]
+    mov rcx, [array_x+rax*QWORD]
     mov [x1], rcx
-    movzx rcx, byte[array_y+rax*BYTE]
+    mov rcx, [array_y+rax*QWORD]
     mov [y1], rcx
     movzx rbx, byte[i]
     add rbx, 1
     movzx rax, byte[tabindex+rbx*BYTE]
-    mov rcx, [array_x+rax*BYTE]
+    mov rcx, [array_x+rax*QWORD]
     mov [x2], rcx
-    mov rcx, [array_y+rax*BYTE]
+    mov rcx, [array_y+rax*QWORD]
     mov [y2], rcx
     ; dessin de la ligne 1
     mov rdi,qword[display_name]
@@ -509,9 +509,9 @@ display_last_point_random:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    movzx r8, byte[last_point_random_y] 		; coordonnée en y du point
+    mov r8, [last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
@@ -534,9 +534,9 @@ display_last_point_random_is_not:
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    movzx rcx, byte[last_point_random_x]	; coordonnée en x du point
+    mov rcx, [last_point_random_x]	; coordonnée en x du point
     sub ecx,3
-    movzx r8,byte[last_point_random_y] 		; coordonnée en y du point
+    mov r8,[last_point_random_y] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
