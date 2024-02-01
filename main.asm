@@ -432,9 +432,9 @@ dessin:
     mov rdx,qword[gc]
 
     movzx rax, byte[i]
-    movzx rcx, byte[array_x+rax*BYTE]		; coordonnée en x du point
+    mov rcx, [array_x+rax]		; coordonnée en x du point
     sub ecx,3
-    movzx r8, byte[array_y+rax*BYTE] 		; coordonnée en y du point
+    mov r8, [array_y+rax] 		; coordonnée en y du point
     sub r8,3
     mov r9,6
     mov rax,23040
