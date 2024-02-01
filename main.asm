@@ -43,8 +43,8 @@ section .bss
     window:		            resq	1
     gc:		                resq	1
 
-    array_x:                resb   NB_POINTS
-    array_y:                resb    NB_POINTS
+    array_x:                resq   NB_POINTS
+    array_y:                resq    NB_POINTS
     tabindex:               resb    NB_POINTS
     val:                    resb    1
     last_point_random_x :   resd 1
@@ -73,13 +73,13 @@ section .data
     point_max_left_print:       db  "index max gauche est %d",10,0
     result_vectoriel_print:     db  "result vectoriel est %d",10,0
     display:                    db  "t[%d]=%d",10,0
-    min_angle_index:            db 0
-    last_min_angle_index:       db 0
-    max:	                    db	10
-    swapped:	                db	0
-    result_vectoriel_xbc_yab:	db	0
-    result_vectoriel_ybc_xab:	db	0
-    final_result_vectoriel:	    db	0
+    min_angle_index:            dd 0
+    last_min_angle_index:       dd 0
+    max:	                    dd	10
+    swapped:	                dd	0
+    result_vectoriel_xbc_yab:	dq	0
+    result_vectoriel_ybc_xab:	dq	0
+    final_result_vectoriel:	    dq	0
     p_index:                    db	0
     q_index:                    db	0
     l_index:                    db	0
@@ -271,19 +271,34 @@ jarivs_boucle_1:
         mov [ybc], rax
 
         ;;; produit vectoriel xbc yab
-        movzx rax, byte[yab]
-        movzx rcx, byte[xab]
+        mov rax, [yab]
+        mov rcx, [xab]
         mul rcx
         mov [result_vectoriel_xbc_yab], rax
 
+            mov rdi,last_random_point_print
+            movzx rsi,byte[yab]
+            mov rax,0
+            call printf
+
+                mov rdi,last_random_point_print
+                movzx rsi,byte[xab]
+                mov rax,0
+                call printf
+
+                    mov rdi,last_random_point_print
+                    movzx rsi,byte[result_vectoriel_xbc_yab]
+                    mov rax,0
+                    call printf
+
         ;;; produit vectoriel xab ybc // TODO : le resultat de la multiplication est faux
-        movzx rax, byte[xbc]
-        movzx rcx, byte[ybc]
+        mov rax, [xbc]
+        mov rcx, [ybc]
         mul rcx
         mov [result_vectoriel_ybc_xab], rax
 
-        movzx rax, byte[result_vectoriel_xbc_yab]
-        movzx rdx, byte[result_vectoriel_ybc_xab]
+        mov rax, [result_vectoriel_xbc_yab]
+        mov rdx, [result_vectoriel_ybc_xab]
         cmp rax, rdx
         jb point_is_to_left
 
