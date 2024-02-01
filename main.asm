@@ -103,7 +103,9 @@ init_array_1:
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
-    mov [array_x+ecx*BYTE], rax
+    mov rax, rax
+    and rax, 0FFh
+    mov [array_x+ecx], rax
 
     inc byte[i]
     cmp byte[i], NB_POINTS
@@ -164,6 +166,8 @@ init_array_2:
     movzx rsi, byte[i]
     movzx ecx, byte[i]
     rdrand rax
+    mov rax, rax
+    and rax, 0FFh
     mov [array_y+ecx*BYTE], rax
 
     inc byte[i]
@@ -276,20 +280,6 @@ jarivs_boucle_1:
         mul rcx
         mov [result_vectoriel_xbc_yab], rax
 
-            mov rdi,last_random_point_print
-            movzx rsi,byte[yab]
-            mov rax,0
-            call printf
-
-                mov rdi,last_random_point_print
-                movzx rsi,byte[xab]
-                mov rax,0
-                call printf
-
-                    mov rdi,last_random_point_print
-                    movzx rsi,byte[result_vectoriel_xbc_yab]
-                    mov rax,0
-                    call printf
 
         ;;; produit vectoriel xab ybc // TODO : le resultat de la multiplication est faux
         mov rax, [xbc]
